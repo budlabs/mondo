@@ -1,0 +1,384 @@
+.TH MONDO 1 2018\-01\-25 Linux "User Manuals"
+.SH NAME
+.PP
+\fB\fCmondo\fR \- Theme manager and generator
+
+.SH SYNOPSIS
+.PP
+\fB\fCmondo\fR \fB\fC\-v\fR|\fB\fC\-h\fR
+.br
+\fB\fCmondo\fR \fB\fC\-a\fR THEME
+.br
+\fB\fCmondo\fR [\fB\fC\-f\fR] \fB\fC\-g\fR THEME
+.br
+\fB\fCmondo\fR \fB\fC\-n\fR \fIFILE\fP|NAME [\fIFILE\fP]
+.br
+\fB\fCmondo\fR \fB\fC\-t\fR \fIFILE\fP|NAME [\fIFILE\fP]
+
+.SH DESCRIPTION
+.PP
+\fB\fCmondo\fR uses \fB\fCxrdb\fR to apply colors and other settings
+from a theme to templates created by the user. The
+themes are \fB\fC\&.Xresources\fR files.
+
+.PP
+Themes are stored in \fIMONDO\_DIR/themes\fP\&. Templates
+(\fImondo\-template\fP) is one file that makes up a \fIgenerator\fP\&.
+Each generator directory is located in \fIMONDO\_DIR/generator\fP\&.
+
+.PP
+By defining special \fImondo\fP resources in the themes,
+the values stored in those resources can be used in
+the templates.
+
+.PP
+Example excerpt from a theme file:
+.br
+\fB\fCmondo.colors.yellow: #FFE000\fR
+
+.PP
+To use the value when generating a file from a template,
+one could use this format:
+.br
+\fB\fCYellowSubmarine="%%colors.yellow%%"\fR
+
+.PP
+This would result in the following when the theme is generated:
+.br
+\fB\fCYellowSubmarine="#FFE000"\fR
+
+.SH THEMES
+.PP
+A new theme is created with the command:
+\fB\fCmondo \-n FILE|NAME [FILE]\fR
+
+.PP
+If FILE is the only argument the name of the theme will
+be the file name. If NAME is the only argument the predefined
+variables of the theme will be taken from Xresources. If FILE
+contains Xresources colors resources those will be set as predefined
+variables. Themes are stored in \fIMONDO\_DIR/themes\fP
+
+.PP
+Example of colors resources:
+
+.PP
+.RS
+
+.nf
+*foreground:  #e9e9f4
+*background:  #282936
+*color0:      #282936
+*color1:      #ea51b2
+*color2:      #ebff87
+
+.fi
+.RE
+
+.PP
+The mandatory content of a theme file is the following
+variables (the values can not be empty and needs to be
+in hexadecimal format):
+
+.PP
+.RS
+
+.nf
+#define fg #73675F
+#define bg #ebdbb2
+
+#define base00 #fbf1c7
+#define base01 #A69881
+#define base02 #ebdbb2
+#define base03 #d5c4a1
+
+#define base0 #282828
+#define base1 #73675F
+#define base2 #504945
+#define base3 #3c3836
+
+#define red #9d0006
+#define ora #af3a03
+#define grn #79740e
+#define ylw #b57614
+#define blu #076678
+#define mag #8f3f71
+#define vio #d65d0e
+#define cyn #427b58
+
+.fi
+.RE
+
+.PP
+The values of fg and bg must exist as values in the base groups.
+They can not exist in the same group. It is strongly suggested
+to keep similar colors (foreground/background) in each group.
+
+.PP
+The xresources colors resources will be auto generated and appended
+to the theme file when it is applied (mondo \-a THEME). Therefor
+the color resources should be removed from \fB\fC\~/.Xresources\fR\&.
+
+.PP
+These resources are managed by \fB\fCmondo\fR:
+
+.PP
+.RS
+
+.nf
+*.foreground:     fg
+*.background:     bg 
+*.cursorColor:    fg
+*.cursorColor2:   bg
+*.border:         bg
+
+*.color0:         bg
+*.color8:         base0
+*.color1:         red
+*.color9:         ora
+*.color2:         grn
+*.color10:        base1
+*.color3:         ylw
+*.color11:        base3
+*.color4:         blu
+*.color12:        vio
+*.color5:         mag
+*.color13:        base01
+*.color6:         cyn
+*.color14:        base02
+*.color7:         fg
+*.color15:        base03
+
+.fi
+.RE
+
+.PP
+The two files \fImondo\-base\fP and \fImondo\-init\fP that is found in
+\fIMONDO\_DIR\fP are also appended to the theme file when a theme
+is applied (\fB\fCmondo \-a THEME\fR). The content of these files are not
+mandatory but holds common and more or less static variable
+and resource definitions.
+
+.SH GENERATORS
+.PP
+A new generator directory is created with the command:
+.br
+\fB\fCmondo \-t FILE|NAME [FILE]\fR
+
+.PP
+If FILE is the only argument, the name of the generator will
+be the file name. If NAME is the only argument a generator without
+a template (\fImondo\-template\fP) file will get created. If FILE exist,
+it will be copied to the generator directory as \fImondo\-template\fP\&.
+The path to the file will also be entered as \fB\fCtarget\fR in
+\fImondo\-settings\fP\&. The target variable is however commented
+out by default.
+
+.PP
+The command: \fB\fCmondo \-l resources\fR lists all resources that can
+be used in a \fImondo\-template\fP file. All valid resources within
+double percentage signs (%%class.type%%) will be replaced with
+the value of that resource when a theme is generated
+(\fB\fCmondo \-[f]g THEME\fR).
+
+.PP
+When a generator is activated with an existing theme,
+(\fB\fCmondo \-[f]g THEME\fR) a file is created in the generators
+directory, with the same name as the theme. If that file already
+exist it will be kept untouched if not the force (\fB\fC\-f\fR) option
+is set, then a new file will be generated.
+
+.PP
+In the file, \fB\fCmondo\-settings\fR, it is possible to fine
+tune the extension, and format (if format is set to \fIrgb\fP,
+the color will be translated to rgb format) of the generated
+file. There is also a setting called \fB\fCtarget\fR, if this is set,
+the generated file will be copied (\fB\fCcp \-f\fR) to path specified
+.br
+when the theme is applied (\fB\fCmondo \-a THEME\fR).
+
+.PP
+To have other actions then copy to target being executed on the
+file one can write scripts in the files: \fImondo\-apply\fP
+(this script will get executed when the theme is applied) and
+\fImondo\-generate\fP (this will get executed AFTER the file is generated).
+These files are autocreated with each generator and are by default
+bash scripts, but if shebang is changed another interpreter could
+be used (such as perl, python, ruby or zsh).
+
+.PP
+Similarly the files \fIpre\-apply\fP and \fIpost\-apply\fP in \fIMONDO\_DIR\fP are
+executed before and/or after a theme is applied and before and/or
+after any generator is invoked.
+
+.PP
+The only actions that is taken without any settings done and that
+is mandatory when a theme is applied (\fB\fCmondo \-a THEME\fR) is the theme
+being included in \fI\~/.Xresources\fP and the command
+\fB\fCxrdb \-load \~/.Xresources\fR is executed.
+
+.SH OPTIONS
+.PP
+\fB\fC\-v\fR
+.br
+  Show version and exit.
+
+.PP
+\fB\fC\-h\fR
+.br
+  Show help and exit.
+
+.PP
+\fB\fC\-a\fR THEME
+.br
+  Apply THEME. The following will happen:
+
+.PP
+.RS
+
+.nf
+1. The file (script) MONDO\_DIR/pre\-apply will  
+   get executed.  
+
+2. MONDO\_DIR/mondo\-theme will get created.  
+
+3. MONDO\_DIR/mondo\-theme will get included in  
+   \~/.Xresources  
+
+4. The command `xrdb \-load \~/.Xresources` will  
+   get executed.  
+
+5. Generators will get applied and the file(s)  
+   mondo\-apply will get executed.  
+
+6. The file (script) MONDO\_DIR/post\-apply will  
+   get executed.  
+
+.fi
+.RE
+
+.PP
+[\fB\fC\-f\fR] \fB\fC\-g\fR THEME
+.br
+  Generate THEME. The following will happen:
+
+.RS
+.IP "  1." 5
+
+.PP
+A file named THEME will be generated based on
+ mondo\-template in each generator directory if
+ it doesn't already exist. If \fB\fC\-f\fR flag is set
+.br
+ it will always generate the file, even if it
+.br
+ already exist.
+.IP "  2." 5
+
+.PP
+If a file was generated the file (script)
+.br
+ \fImondo\-generate\fP will get executed.
+
+.RE
+
+.PP
+\fB\fC\-n\fR \fIFILE\fP|NAME [\fIFILE\fP]
+.br
+  Create a new theme, see description above.
+
+.PP
+\fB\fC\-t\fR \fIFILE\fP|NAME [\fIFILE\fP]
+.br
+    Create a new generator, see description above.
+
+.SH FILES
+.PP
+\fIMONDO\_DIR/mondo\-theme\fP
+.br
+  This file will get generated, when a theme is
+.br
+  generated (\fB\fC\-g\fR) or applied (\fB\fC\-a\fR). The content
+.br
+  of this file is the selected
+.br
+  THEME + \fIMONDO\_DIR/mondo\-base\fP + \fIMONDO\_DIR/mondo\-init\fP
+.br
+  and some auto generated resources. This is file
+.br
+  will get included in \fI\~/.Xresources\fP\&.
+
+.PP
+\fIMONDO\_DIR/mondo\-base\fP
+.br
+  The content of this file will get appended to
+.br
+  mondo\-theme, when a theme is generated (\fB\fC\-g\fR) or
+.br
+  applied (\fB\fC\-a\fR).
+
+.PP
+\fIMONDO\_DIR/mondo\-init\fP
+.br
+  The content of this file will get appended to
+.br
+  mondo\-theme, when a theme is generated (\fB\fC\-g\fR) or
+.br
+  applied (\fB\fC\-a\fR).
+
+.PP
+\fIMONDO\_DIR/pre\-apply\fP
+.br
+  This file get executed BEFORE any other action
+.br
+  when a THEME is applied (\fB\fC\-a\fR).
+
+.PP
+\fIMONDO\_DIR/post\-apply\fP
+.br
+  This file get executed AFTER all other actions are
+.br
+  executed when a THEME is applied (\fB\fC\-a\fR).
+
+.PP
+\fImondo\-apply\fP
+.br
+  This file is auto generated with each generator.
+.br
+  It will get executed when a THEME is applied (\fB\fC\-a\fR).
+
+.PP
+\fImondo\-generate\fP
+.br
+  This file is auto generated with each generator.
+.br
+  It will get executed when a THEME is generated (\fB\fC\-g\fR).
+
+.PP
+\fImondo\-settings\fP
+.br
+  This file is auto generated with each generator.
+.br
+  It contains settings that will affect the generator.
+
+.PP
+\fImondo\-template\fP
+.br
+  This file is auto generated with each generator.
+.br
+  This is the template file for the generator.
+
+.SH ENVIRONMENT
+.PP
+\fB\fCMONDO\_DIR\fR
+.br
+  The path to a directory where all mondo files are
+.br
+  stored. Defaults to \fI\~/.config/mondo\fP
+
+.SH AUTHOR
+.PP
+budRich 
+\[la]robstenklippa@gmail.com\[ra]
+
+\[la]https://budrich.github.io\[ra]
