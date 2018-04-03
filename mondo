@@ -1,11 +1,11 @@
 #!/bin/bash
 
 NAME="mondo"
-VERSION="0.021"
+VERSION="0.023"
 AUTHOR="budRich"
 CONTACT='robstenklippa@gmail.com'
 CREATED="2018-01-25"
-UPDATED="2018-02-20"
+UPDATED="2018-04-02"
 
 MONDO_DIR="$HOME/.config/mondo"
 filex=""

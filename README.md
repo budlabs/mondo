@@ -1,5 +1,3 @@
-# mondo
-
 `mondo` - Theme manager and generator
 
 SYNOPSIS
