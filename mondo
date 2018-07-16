@@ -1,30 +1,39 @@
 #!/bin/bash
 
 NAME="mondo"
-VERSION="0.023"
+VERSION="0.1.0"
 AUTHOR="budRich"
 CONTACT='robstenklippa@gmail.com'
 CREATED="2018-01-25"
-UPDATED="2018-04-02"
+UPDATED="2018-07-13"
 
-MONDO_DIR="$HOME/.config/mondo"
-filex=""
-lastvar=""
+MONDO_DIR="${MONDO_DIR:-$HOME/.config/monte}"
+
+DATEFORMAT='+%Y-%m-%d'
+
+wt=""      # theme in memory
+wt_name="" # name of theme in memory
 
 main(){
 
+  [[ -z $1 ]] && printinfo && exit
+  # setwt nikes
+  # echo "${wt}" | sort
+  # exit
+
   eval lastvar="\${$#}"
 
-  while getopts :vhn:g:a:l:t:f option; do
+  while getopts :vhn:g:a:l:t:fu: option; do
 
     case "${option}" in
 
-      n) newmondo "${OPTARG}" ;;
-      t) tmpmondo "${OPTARG}" ;;
-      g) genmondo "${OPTARG}" ;;
-      a) appmondo "${OPTARG}" ;;
-      l) lstmondo "${OPTARG}" ;;
-      f) force=1              ;;
+      n) newtheme        "${OPTARG}" ;;
+      t) newgenerator    "${OPTARG}" ;;
+      g) generatetheme   "${OPTARG}" ;;
+      a) applytheme      "${OPTARG}" ;;
+      l) mondolist       "${OPTARG}" ;;
+      u) updategenerator "${OPTARG}" ;;
+      f) force=1                     ;;
 
       v) printf '%s\n' \
            "$NAME - version: $VERSION" \
@@ -35,162 +44,28 @@ main(){
     esac
 
   done
-
-}
-
-genxcolors(){
-  local theme="$1"
-
-  awk '
-    $1=="#define" && $2!~/font|theme/{\
-
-      if($2~/^base[0-3]$/)
-        abass[$2]=$3
-
-      else if($2~/^base0[0-3]$/)
-        abasd[$2]=$3
-      
-      else
-        acols[$2]=$3
-
-    }
-
-    END{
-
-      # remove fg/bg from arrays and note heritage
-
-      for(k in abass){
-
-        if(abass[k]==acols["fg"]){
-          delete abass[k]
-          fga="s"
-          break
-        }
-
-        if(abass[k]==acols["bg"]){
-          delete abass[k]
-          bga="s"
-          break
-        }
-
-      }
-
-      for(k in abasd){
-
-        if(abasd[k]==acols["fg"]){
-          delete abasd[k]
-          fga="d"
-          break
-        }
-
-        if(abasd[k]==acols["bg"]){
-          delete abasd[k]
-          bga="d"
-          break
-        }
-        
-      }
-
-      nbg="13,14,15"
-      nfg="8,10,11"
-
-      for(k in abasd){
-
-        if(fga=="d"){
-          onfg=nfg
-          sub("[,].*","",nfg)
-          afg[nfg]=k
-          sub("[0-9]*[,]","",onfg)
-          nfg=onfg
-        }
-
-        if(bga=="d"){
-          onbg=nbg
-          sub("[,].*","",nbg)
-          abg[nbg]=k
-          sub("[0-9]*[,]","",onbg)
-          nbg=onbg
-        }
-        
-      }
-
-      for(k in abass){
-
-        if(fga=="s"){
-          onfg=nfg
-          sub("[,].*","",nfg)
-          afg[nfg]=k
-          sub("[0-9]*[,]","",onfg)
-          nfg=onfg
-        }
-
-        if(bga=="s"){
-          onbg=nbg
-          sub("[,].*","",nbg)
-          abg[nbg]=k
-          sub("[0-9]*[,]","",onbg)
-          nbg=onbg
-        }
-        
-      }
-
-      print "*.color0:                 bg"
-      print "*.color8:                 " afg["8"]
-      print "*.color1:                 red"
-      print "*.color9:                 ora"
-      print "*.color2:                 grn"
-      print "*.color10:                " afg["10"]
-      print "*.color3:                 ylw"
-      print "*.color11:                " afg["11"]
-      print "*.color4:                 blu"
-      print "*.color12:                vio"
-      print "*.color5:                 mag"
-      print "*.color13:                " abg["13"]
-      print "*.color6:                 cyn"
-      print "*.color14:                " abg["14"]
-      print "*.color7:                 fg"
-      print "*.color15:                " abg["15"] 
-
-    }
-  ' "$theme"
-}
-
-tmpmondo(){
-
-  local src="$1"
-  local nmn="${src##*/}"
-  nmn=${nmn//'.'/}
-  local dir="$MONDO_DIR/generator/$nmn"
-
-  [[ -f "$lastvar" ]] && filex="$lastvar"
-
-  if [[ ! -d "$dir" ]]; then
-
-    mkdir -p "$dir"
-
-    newappcont "$dir/mondo-apply"
-    newgencont "$dir/mondo-generate"
-    newcnfcont "$dir/mondo-settings"
-
-  fi
-
-
-  [[ -n "$filex" ]] \
-    && cp -f "$lastvar" "$dir/mondo-template" \
-    || touch "$dir/mondo-template"
-
-  echo "$dir/mondo-template"
-
-}
-
-lstmondo(){
   
-  local type="$1"
+}
 
-  case "$type" in
+mondolist(){
+  case "$1" in
 
-    icons   ) 
-      
+    theme* ) 
+      ls "$MONDO_DIR/themes" \
+      | grep -v '^_' | sort ;;
+
+    generator* ) \
+      ls "$MONDO_DIR/generator" | sort ;;
+
+    var* )
+      vf="$MONDO_DIR/themes/$lastvar"
+      [[ -f "$vf" ]] \
+        && setwt $lastvar \
+        || wt=$(cat "$MONDO_DIR/themes/.current")
+      printf '%%%%%s%%%%\t%s\n' ${wt} | sort
+    ;;
+
+    icon*   )   
       for f in /usr/share/icons/*; do
 
         [[ -d "$f/cursors" ]] && continue
@@ -204,11 +79,9 @@ lstmondo(){
         [[ ${f##*/} = default ]] && continue
         echo "${f##*/}"
       done 
-
     ;;
 
     gtk    ) 
-
       for f in /usr/share/themes/*; do
         [[ -d "$f/gtk-2.0" ]] || continue
         echo "${f##*/}"
@@ -218,440 +91,233 @@ lstmondo(){
         [[ -d "$f/gtk-2.0" ]] || continue
         echo "${f##*/}"
       done 
-
     ;;
 
-    themes  ) 
-      
-      for f in $MONDO_DIR/themes/*; do
-        echo "${f##*/}"
-      done 
+    resource*  ) 
+      xrdb -query \
+        | awk '$1~/mondo/ {printf "%-22s%s\n",$1,$2}' ;;
 
-    ;;
-
-    generators  ) 
-      
-      for f in $MONDO_DIR/generators/*; do
-        echo "${f##*/}"
-      done 
-
-    ;;
-
-    resources  ) 
-      
-      xrdb -query | awk '
-        $1~/mondo/{
-          gsub("mondo.|[:]", "", $1)
-          space=""
-          for(i=20;i>length($1);i--)
-            space=space " "
-          print $1 space "\t" $2
-        }
-      '
-    ;;
-
-    cursors ) 
-
+    cursor* ) 
       for f in /usr/share/icons/*; do
-
         [[ -d "$f/cursors" ]] || continue
         [[ ${f##*/} = default ]] && continue
         echo "${f##*/}"
       done 
 
       for f in $HOME/.icons/*; do
-
         [[ -d "$f/cursors" ]] || continue
         [[ ${f##*/} = default ]] && continue
         echo "${f##*/}"
       done  
-
     ;;
-
   esac
+}
+
+updategenerator(){
+
+  dir="$MONDO_DIR/generator/$1"
+
+  [[ -d "$dir" ]] \
+    || ERX "generator $1 doesn't exist."
+
+  for t in $(mondolist themes); do
+    setwt "$t"
+    themetogenerator "$1"
+  done
 
 }
 
-appmondo(){
+applytheme(){
+  local template gdir
 
-  local nmn src xrorgl xfile
-
-  nmn="${1##*/}"
-  src="$MONDO_DIR/themes/$nmn"
-
-  [[ -f "$src" ]] || { 
-    echo "Theme $src doesn't exist." 
-    exit ; }
+  setwt "$1"
+  echo "${wt}" > "$MONDO_DIR/themes/.current"
 
   [[ -f "$MONDO_DIR/pre-apply" ]] \
-      && "$MONDO_DIR/pre-apply"
+    && preop="$($MONDO_DIR/pre-apply)"
 
-  rm -f "$MONDO_DIR/mondo-theme"
+  for g in $(mondolist generator); do
+    themetogenerator "$g"
+    gdir="$MONDO_DIR/generator/$g"
+    (
+      target=""
+      ext=""
 
-  cat "$src" "$MONDO_DIR/mondo-init" <(genxcolors "$src") \
-    > "$MONDO_DIR/mondo-theme"
+      [[ -f "$gdir/_mondo-settings" ]] \
+        && . "$gdir/_mondo-settings"
 
+      [[ -n $ext ]] \
+        && template="$gdir/${wt_name}.$ext" \
+        || template="$gdir/$wt_name"
 
-  xfile=$(readlink -f "$HOME/.Xresources")
-  xrorgl="$(grep 'mondo-theme' $xfile)"
+      [[ -n $target ]] \
+        && cp -f "$template" "${target/'~'/$HOME}"
 
-  if [[ -z "$xrorgl" ]]; then
-
-    echo "#include \"${MONDO_DIR/$HOME\/}/mondo-theme\"" \
-      > /tmp/xrestmp
-
-    cat "$HOME/.Xresources" >> /tmp/xrestmp
-    mv -f /tmp/xrestmp "$xfile"
-
-  fi
-
-  xrdb -load "$HOME/.Xresources"
-
-  # copy files
-  for d in "$MONDO_DIR/generator/"*; do
-
-    [[ ! -d "$d" ]] && continue
-    echo "$d"
-    format=""
-    target=""
-    ext=""
-
-    [[ -f "$d/mondo-settings" ]] \
-      && . "$d/mondo-settings"
-
-    [[ -n $ext ]] \
-      && src="$d/${nmn}.$ext" \
-      || src="$d/$nmn"
-
-    if [[ -n $target ]] && [[ -f "$src" ]]; then
-      [[ ${target} =~ ${HOME} ]] \
-        && cp -f "$src" "$target" \
-        || gksudo cp "$src" "$target" 
-    fi
-
-    [[ -f "$d/mondo-apply" ]] \
-      && "$d/mondo-apply" "$src"
-
+      [[ -f "$gdir/_mondo-apply" ]] \
+        && "$gdir/_mondo-apply" "$template"
+    )
   done
 
   [[ -f "$MONDO_DIR/post-apply" ]] \
-      && "$MONDO_DIR/post-apply"
+    && "$MONDO_DIR/post-apply" "${preop}"
 }
 
-genmondo(){
+generatetheme(){
+  if [[ $1 = all ]]; then
+    for t in $(mondolist themes); do 
+      generatetheme $t
+    done
+  else
+    setwt "$1"
 
-  local nmn type ext format target
-
-  nmn="${1##*/}"
-  src="$MONDO_DIR/themes/$nmn"
-
-  [[ -f "$src" ]] || { 
-    echo "Theme $src doesn't exist." 
-    exit ; }
-
-  mv "$MONDO_DIR/mondo-theme" "$MONDO_DIR/mondo-themeBAK"
-
-  cat "$src" "$MONDO_DIR/mondo-init" <(genxcolors "$src") \
-    > "$MONDO_DIR/mondo-theme"
-
-  xrorgl="$(grep 'mondo-theme' $HOME/.Xresources)"
-
-  if [[ -z "$xrorgl" ]]; then
-
-    echo "#include \"${MONDO_DIR/$HOME\/}/mondo-theme\"" \
-      > /tmp/xrestmp
-
-    cat "$HOME/.Xresources" >> /tmp/xrestmp
-    mv -f /tmp/xrestmp "$HOME/.Xresources"
-
+    for g in $(mondolist generator); do
+      themetogenerator "$g"
+    done
   fi
-
-  xrdb -load "$HOME/.Xresources"
-
-  hexvars="$(xrdb -query | awk '
-
-    $1~/mondo/{
-      gsub("mondo.|[:]","",$1)
-      var=$1
-      $1=""
-      sub(" ","",$0)
-      printf var "=" $0 ":"
-    }
-
-    $1~/color[0-9]*:/{
-      gsub("[*].|[:]","",$1)
-      var=$1
-      $1=""
-      sub(" ","",$0)
-      printf var "=" $0 ":"
-    }
-
-  ')"
-
-  rgbvars="$(xrdb -query | awk '
-    $1~/mondo/{
-
-      gsub("mondo.|[:]","",$1)
-      var=$1
-      $1=""
-
-      if(var~/colors/){
-        
-        sub("#","",$2)
-        "color-converter.sh " $2 | getline cc
-        val=cc
-        gsub(".*[(]|[)]| ","",val)
-        printf var "=" val ":"
-
-      } else {
-
-        sub(" ","",$0)
-        printf var "=" $0 ":"
-
-      }
-
-    }
-  ')"
-
-  mv -f "$MONDO_DIR/mondo-themeBAK" "$MONDO_DIR/mondo-theme"
-
-  xrdb -load "$HOME/.Xresources"
-
-  for f in "$MONDO_DIR/generator/"*; do
-
-    type=${f##*/}
-
-    format=""
-    target=""
-    ext=""
-
-    [[ -f "$MONDO_DIR/generator/$type/mondo-settings" ]] \
-      && . "$MONDO_DIR/generator/$type/mondo-settings"
-
-    [[ -n $ext ]] && ext=".${ext}"
-
-    trg="$MONDO_DIR/generator/$type/${nmn}${ext}"
-
-    [[ $format =~ RGB|rgb ]] \
-      && usevars=${rgbvars} \
-      || usevars=${hexvars}
-    # usevars=${hexvars}
-    template="$MONDO_DIR/generator/$type/mondo-template"
-
-    [[ $force = 1 ]] && [[ -f "$trg" ]] \
-      && rm "$trg"
-
-    if [[ ! -f "$trg" ]] && [[ -f "$template" ]]; then
-
-      awk -v thmnmn="$nmn" -v fmondo="${usevars}" '
-
-        BEGIN{
-          split(fmondo,tmondo,":")
-          for(k in tmondo){
-            val=substr(tmondo[k],index(tmondo[k], "=")+1)
-            sub("=.*","",tmondo[k])
-            if(val!="")
-              amondo[tmondo[k]]=val
-          }
-        }
-
-        {
-          sub("%%theme%%",thmnmn,$0)
-
-          for(m in amondo)
-            gsub("%%"m"%%",amondo[m],$0)
-
-          print $0
-
-        }' "$template" > "$trg"
-
-      genscript="$MONDO_DIR/generator/$type/mondo-generate"
-
-      [[ -f "$genscript" ]] && "$genscript" "$trg"
-
-    fi
-
-  done
 }
 
-newmondo(){
+newgenerator(){
+  local src="$1"
+  local nmn="${src##*/}"
+  nmn=${nmn//'.'/}
+  local dir="$MONDO_DIR/generator/$nmn"
 
-  src="$lastvar"
-  trg="$MONDO_DIR/themes/${1##*/}"
+  [[ -d "$dir" ]] \
+    && ERX "generator $nmn already exist" \
+    || mkdir -p "$dir"
 
-  if [[ ! -d "$MONDO_DIR" ]]; then
+  [[ -f "$lastvar" ]] && filex="$lastvar"
 
-    mkdir -p "$MONDO_DIR/themes"
-    mkdir -p "$MONDO_DIR/generator"
+  newfile_generatorapply "$dir/_mondo-apply"
+  newfile_generatorgenerate "$dir/_mondo-generate"
+  newfile_generatorsettings "$dir/_mondo-settings"
 
-    newpostapp "$MONDO_DIR/post-apply"
-    newpreapp  "$MONDO_DIR/pre-apply"
+  [[ -n "$filex" ]] \
+    && cp -f "$lastvar" "$dir/_mondo-template" \
+    || touch "$dir/mondo-template"
 
-  fi
-
-  declare -A aclr
-
-  aclr[base02]=#000000
-  aclr[base03]=#333333
-  aclr[red]=#FF0000
-  aclr[ora]=#AA0000
-  aclr[grn]=#00FF00
-  aclr[base01]=#00AA00
-  aclr[ylw]=#FFF000
-  aclr[base00]=#AAA000
-  aclr[blu]=#0000FF
-  aclr[base0]=#0000AA
-  aclr[mag]=#FF00FF
-  aclr[vio]=#AA00AA
-  aclr[cyn]=#00FFFF
-  aclr[base1]=#00AAAA
-  aclr[base2]=#FFFFFF
-  aclr[base3]=#AAAAAA
-  aclr[fg]=#FFFFFF
-  aclr[bg]=#000000
-
-  eval "$(xrdb -query | awk '
-    $1~"color0:"      {print "aclr[base00]=" $2}
-    $1~"color8:"      {print "aclr[base3]=" $2}
-    $1~"color1:"      {print "aclr[red]="    $2}
-    $1~"color9:"      {print "aclr[ora]="    $2}
-    $1~"color2:"      {print "aclr[grn]="    $2}
-    $1~"color10:"     {print "aclr[base1]=" $2}
-    $1~"color3:"      {print "aclr[ylw]="    $2}
-    $1~"color11:"     {print "aclr[base0]=" $2}
-    $1~"color4:"      {print "aclr[blu]="    $2}
-    $1~"color12:"     {print "aclr[vio]="  $2}
-    $1~"color5:"      {print "aclr[mag]="    $2}
-    $1~"color13:"     {print "aclr[base01]="    $2}
-    $1~"color6:"      {print "aclr[cyn]="    $2}
-    $1~"color14:"     {print "aclr[base02]="  $2}
-    $1~"color7:"      {print "aclr[base2]="  $2}
-    $1~"color15:"     {print "aclr[base03]="  $2}
-    $1~"foreground:"  {print "aclr[fg]="     $2}
-    $1~"background:"  {print "aclr[bg]="     $2}
-  ')"
-
-  [[ -f "$src" ]] && {
-    eval "$(awk '
-      $1~"color0:"      {print "aclr[base00]=" $2}
-      $1~"color8:"      {print "aclr[base3]=" $2}
-      $1~"color1:"      {print "aclr[red]="    $2}
-      $1~"color9:"      {print "aclr[ora]="    $2}
-      $1~"color2:"      {print "aclr[grn]="    $2}
-      $1~"color10:"     {print "aclr[base1]=" $2}
-      $1~"color3:"      {print "aclr[ylw]="    $2}
-      $1~"color11:"     {print "aclr[base0]=" $2}
-      $1~"color4:"      {print "aclr[blu]="    $2}
-      $1~"color12:"     {print "aclr[vio]="  $2}
-      $1~"color5:"      {print "aclr[mag]="    $2}
-      $1~"color13:"     {print "aclr[base01]="    $2}
-      $1~"color6:"      {print "aclr[cyn]="    $2}
-      $1~"color14:"     {print "aclr[base02]="  $2}
-      $1~"color7:"      {print "aclr[base2]="  $2}
-      $1~"color15:"     {print "aclr[base03]="  $2}
-      $1~"foreground:"  {print "aclr[fg]="     $2}
-      $1~"background:"  {print "aclr[bg]="     $2}
-    ' "$src")"
-  }
-
-  for k in fg bg X base00 base01 base02 base03 \
-                   base0 base1 base2 base3 X \
-                   red ora grn ylw blu mag vio cyn
-  do
-    [[ $k = X ]] && echo  >> "$trg" && continue
-    echo "#define $k ${aclr[$k]}" >> "$trg"
-  done
-
-  [[ ! -f "$MONDO_DIR/mondo-base" ]] \
-    && newbase "$MONDO_DIR/mondo-base"
-
-  [[ ! -f "$MONDO_DIR/mondo-init" ]] \
-    && newinit "$MONDO_DIR/mondo-init"
-
-  echo >> "$trg"
-  cat "$MONDO_DIR/mondo-base" >> "$trg"
-
-  echo "$trg"
-}
-
-newinit(){
-local trg="$MONDO_DIR/mondo-init"
-
-echo "mondo.terminal.fontface1: terminalfontface1
-mondo.terminal.fontface2: terminalfontface2
-mondo.terminal.fontsize1: terminalfontsize1
-mondo.terminal.fontsize2: terminalfontsize2
-
-mondo.colors.yellow:      ylw
-mondo.colors.orange:      ora
-mondo.colors.redish:      red
-mondo.colors.magenta:     mag
-mondo.colors.violet:      vio
-mondo.colors.blue:        blu
-mondo.colors.cyan:        cyn
-mondo.colors.green:       grn
-
-mondo.gui.cursor:         cursortheme
-mondo.gui.icon:           icontheme
-mondo.gui.gtk:            gtktheme
-
-mondo.gui.fontface1:      guifontface1
-mondo.gui.fontface2:      guifontface2
-mondo.gui.fontsize1:      guifontsize1
-mondo.gui.fontsize2:      guifontsize2
-
-*.foreground:             fg
-*.background:             bg 
-*.cursorColor:            fg
-*.cursorColor2:           bg
-*.border:                 bg
-" > "$trg"
+  echo "$dir/_mondo-template"
 }
 
 newbase(){
-local trg="$MONDO_DIR/mondo-base"
+  mkdir -p "$MONDO_DIR/themes"
 
-echo "mondo.colors.fg1:         fg
-mondo.colors.fg2:         base01
-mondo.colors.bg1:         bg
-mondo.colors.bg2:         base03
-
-mondo.colors.dark1:       base03
-mondo.colors.light1:      base1
-
-mondo.colors.act1:        blu
-mondo.colors.act2:        base3
-mondo.colors.act3:        base01
-
-mondo.colors.ina1:        cyn
-mondo.colors.ina2:        fg
-mondo.colors.ina3:        base01
-
-mondo.colors.sel1:     base01
-mondo.colors.sel2:     base03
-
-!! GUI theme
-#define cursortheme     $(mondo -l cursors| head -1)  
-#define icontheme       $(mondo -l icons  | head -1)  
-#define gtktheme        $(mondo -l gtk    | head -1)  
-
-!! Terminal fonts
-#define terminalfontface1 monospace
-#define terminalfontsize1 12
-#define terminalfontface2 monospace
-#define terminalfontsize2 18
-
-!! GUI fonts
-#define guifontface1      sans
-#define guifontsize1      12
-#define guifontface2      sans
-#define guifontsize2      18
-" > "$trg"
+  newfile_postapply 
+  newfile_preapply  
+  newfile_defaulttheme
+  newfile_themetemplate
 }
 
-shebang='#!/bin/bash'
+newtheme(){
+  [[ -f "$MONDO_DIR/themes/$1" ]] && [[ -z $force ]] \
+    && ERX "theme $1 already exist"
 
-preapp='
+  [[ -f "$MONDO_DIR/themes/_default" ]] \
+    || newbase
+
+  { 
+    printf '!! %-10s%s\n' \
+      "Theme:" "$1" \
+      "Author:" "$USER" \
+      "Created:" "$(date "$DATEFORMAT")"
+
+    cat "$MONDO_DIR/themes/_template"
+  } > "$MONDO_DIR/themes/$1"
+}
+
+
+setwt(){
+  # reads base theme
+  # overwrite base theme with target theme ($1)
+
+  [[ -f "$MONDO_DIR/themes/$1" ]] \
+    || ERX "theme $1 doen't exist."
+
+  wt_name="$1"
+
+  wt="$(
+    cd "$MONDO_DIR/themes"
+    readtheme <(echo theme "$1"; cat "$1" _default "$1")
+  )"
+}
+
+themetogenerator(){
+  # generates a file (MONDO_DIR/generator/$1/THEME)
+  # from a generator ($1) template
+
+  dir="$MONDO_DIR/generator/$1"
+
+  [[ -d "$dir" ]] \
+    || ERX "generator $1 doen't exist."
+
+  if [[ -f "$dir/$wt_name" ]] && [[ -z $force ]]; then
+    ERR "theme $wt_name is already in $1."
+  else
+    ext=""
+
+    [[ -f "$dir/_mondo-settings" ]] \
+      && . "$dir/_mondo-settings"
+
+    echo "$dir --- $ext"
+    [[ -n $ext ]] \
+      && themename="$wt_name.$ext" \
+      || themename="$wt_name"
+      
+    {
+      echo "${wt}"
+      echo "__TEMPLATE"
+      cat "$dir/_mondo-template"
+    } | awk '
+
+      start!=1 && $0!="__TEMPLATE" {
+        cvar=$1
+        $1=""
+        sub(/[[:space:]]*/,"",$0)
+        cval=$0
+        vars[cvar]=cval
+      }
+
+      start==1 {
+        for (k in vars){
+          gsub("%%"k"%%",vars[k],$0)
+        }
+        print
+      }
+
+      $0=="__TEMPLATE" {start=1}
+    ' > "$dir/$themename"
+
+    [[ -f "$dir/_mondo-generate" ]] \
+      && "$dir/_mondo-generate" "$dir/$themename"
+  fi
+}
+
+readtheme(){
+  awk '
+    /./ && $1 !~ /^!/ {
+      cvar=$1
+      $1=""
+      sub(/[[:space:]]*/,"",$0)
+      cval=$0
+      for (v in vars) {
+        if (v==cvar || cval==v) {cval=vars[v]}
+      }
+      vars[cvar]=cval
+    }
+
+    END {
+      for (v in vars) {
+        printf "%-20s%s\n", v, vars[v]
+      }
+    }
+  ' "$1"
+}
+
+newfile_preapply(){
+local fil="$MONDO_DIR/pre-apply"
+[[ -f "$fil" ]] || {
+echo '#!/bin/bash
+
 # This script is executed before anything else, 
 # when mondo is executed with the apply option (-a).
 
@@ -661,20 +327,15 @@ preapp='
 # For instance one might want to kill certain processes
 # before applying, since some programs might overwrite
 # the new settings with the old. 
-'
-
-newpreapp(){
-  local trg
-
-  trg="${1}"
-
-  echo "$shebang" > "$trg"
-  echo "$preapp" >> "$trg"
-
-  chmod +x "$trg"
+' > "$fil"
+chmod +x "$fil" ;}
 }
 
-postapp='
+newfile_postapply(){
+local fil="$MONDO_DIR/post-apply"
+[[ -f "$fil" ]] || {
+echo "#!/bin/bash
+
 # This script is executed AFTER all other applying
 # actions and scripts are finished, when mondo is 
 # executed with the apply option (-a).
@@ -684,20 +345,98 @@ postapp='
 
 # For instance one might want to reload certain processes
 # like windowmanagers and statusbars. 
-'
 
-newpostapp(){
-  local trg
-
-  trg="${1}"
-
-  echo "$shebang" >  "$trg"
-  echo "$postapp" >> "$trg"
-
-  chmod +x "$trg"
+# xrdb -load -I\$HOME "$XFILE"
+" > "$fil"
+chmod +x "$fil" ;}
 }
 
-appcont='
+newfile_defaulttheme(){
+local fil="$MONDO_DIR/themes/_default"
+[[ -f "$fil" ]] || {
+echo '
+bg           #222222
+bg2          #333333
+
+fg           #DDDDDD
+comment      #AAAAAA
+
+red          #FF0000
+green        #00FF00
+blue         #0000FF
+yellow       #FFFF00
+cyan         #00FFFF
+magenta      #FF00FF
+
+dark         #000000
+light        #FFFFFF
+
+activebg     cyan
+activefg     light
+activehl     dark
+
+inactivebg   blue
+inactivefg   fg
+
+selectedbg   magenta
+selectedfg   light
+
+fontface1    monospace
+fontsize1    16
+
+fontface2    fontface1
+fontsize2    fontsize1
+
+fg2          comment
+
+redb         red
+greenb       green
+blueb        blue
+yellowb      yellow
+cyanb        cyan
+magentab     magenta
+
+gtktheme
+icontheme
+cursortheme
+' > "$fil" ;}
+}
+
+newfile_themetemplate(){
+local fil="$MONDO_DIR/themes/_template"
+[[ -f "$fil" ]] || {
+echo '
+bg           #222222
+bg2          #333333
+
+fg           #DDDDDD
+comment      #AAAAAA
+
+red          #FF0000
+green        #00FF00
+blue         #0000FF
+yellow       #FFFF00
+cyan         #00FFFF
+magenta      #FF00FF
+
+dark         #000000
+light        #FFFFFF
+
+activebg     cyan
+activefg     light
+activehl     dark
+
+inactivebg   blue
+inactivefg   fg
+
+selectedbg   magenta
+selectedfg   light
+' > "$fil" ;}
+}
+
+newfile_generatorapply(){
+local fil="${1}"
+echo '#!/bin/bash
 # This script is executed every time a theme is applied.
 # Each generator can have it'"'"'s own mondo-apply script.
 
@@ -714,21 +453,14 @@ appcont='
 # this_theme="${this_file%.*}"
 
 # To source the settings file one could use this:
-# source "${this_dir}/mondo-settings"
-'
-
-newappcont(){
-  local trg
-  
-  trg="${1}"
-
-  echo "$shebang" >  "$trg"
-  echo "$appcont" >> "$trg"
-
-  chmod +x "$trg"
+# source "${this_dir}/_mondo-settings"
+' > "$fil"
+chmod +x "$fil"
 }
 
-gencont='
+newfile_generatorgenerate(){
+local fil="${1}"
+echo '#!/bin/bash
 # This script is executed every time a theme is generated.
 # Each generator can have it'"'"'s own mondo-generate script.
 
@@ -745,54 +477,294 @@ gencont='
 # this_theme="${this_file%.*}"
 
 # To source the settings file one could use this:
-# source "${this_dir}/mondo-settings"
-'
-
-newgencont(){
-  local trg
-  
-  trg="${1}"
-
-  echo "$shebang" >  "$trg"
-  echo "$gencont" >> "$trg"
-
-  chmod +x "$trg"
+# source "${this_dir}/_mondo-settings"
+' > "$fil"
+chmod +x "$fil"
 }
 
-newcnfcont(){
-  local trg
-  
-  trg="${1}"
-
-  echo "
-# The content of this file is sourced by mondo.
+newfile_generatorsettings(){
+local fil="${1}"
+echo '# The content of this file is sourced by mondo.
 # The syntax is bash. But it is not recommended to
 # add any script functions other then variable declaration
 # in this file.
 
 # If ext is set, it will be appended as an extension
 # when files are generated.
-ext=\"\"
-
-# The default format is \"hex\". If format is set to
-# rgb, colors will be translated to RGB format.
-# Example: #FF00FF -> 255,255,255
-format=\"hex\"
+# ext=""
 
 # target can be an (absolute) file path to where
 # the file will be copied when a theme is applied.
-" > "$trg"
+'  > "$fil"
 
-  if [[ -n $filex ]]; then
-    fildir=$(dirname "$filex")
-    [[ $fildir = '.' ]] && fildir=$(pwd)
-    echo "# target=\"${fildir}/${filex##*/}\"" >> "$trg"
-  else
-    echo "target=\"\"" >> "$trg"
-  fi
+if [[ -n $filex ]]; then
+  fildir=$(dirname "$filex")
+  [[ $fildir = '.' ]] && fildir=$(pwd)
+  echo "target=\"${fildir/$HOME/'~'}/${filex##*/}\"" 
+else
+  echo "target=\"\""
+fi >> "$fil"
 }
 
+ERR(){ >&2 echo $@; }
+ERX(){ >&2 echo $@ && exit 1 ; }
+
 printinfo(){
+about='
+`mondo` - Theme manager and generator
+
+SYNOPSIS
+--------
+`mondo` `-v`|`-h`  
+`mondo` `-a` THEME  
+`mondo` [`-f`] `-g` THEME|all  
+`mondo` [`-f`] `-u` GENERATOR  
+`mondo` `-n` NAME  
+`mondo` `-l` theme|resource|icon|gtk|cursor  
+`mondo` `-t` *FILE*|NAME [*FILE*]  
+
+DESCRIPTION
+-----------
+
+`mondo` applies variables defined in themefiles to
+templates defined in generators. `mondo` executes
+userdefined scripts before any theme is applied, 
+after each theme is applies and after all themes
+are applied. It can also execute a script after each
+theme is *generated*.
+
+THEMES
+------
+
+Theme files are located in *MONDO_DIR*/themes, to 
+create a new theme, use the `-n` option.
+
+The first word of each line is the name of a 
+**mondo variable**, the rest of the line (excluding 
+white space between the first and the second word) 
+will be the value of that variable. Below i create
+a simple theme called `example`. (the theme name is
+always it'"'"'s filename.)
+
+``` shell
+$ cat << EOF > ~/.config/mondo/themes/example
+# example theme
+author    Nils Kvist
+blue #0000FF
+fontface Terminus
+EOF
+```
+
+*in the example above I the theme file is created 
+directly, it is strongly recommended to use  
+`mondo -n THEME` to create a theme*.  
+
+Lines starting with `#`, will be ignored.
+The example above would result in three variables:
+  * author="Nils Kvist"
+  * blue="#0000FF"
+  * fontface="Terminus"
+
+GENERATORS
+----------
+
+Generators are located in *MONDO_DIR*/generator.
+To create a new generator use the `-t` option. The
+only file that is needed for a generator to work is
+*_mondo-template*. If a filename was the last argument
+when `mondo` was executed with the `-t` (create generator)
+option, *_mondo-template* will be a copy of that file.
+
+In the template files, one can use the **mondo variables**
+defined in the theme files by typing the name of the
+variable enclosed in double (`%%`) percentage characters,
+like this:  
+
+``` text
+$ cat << EOF > \
+  ~/.config/mondo/generator/presentation/_mondo-template
+My name is %%author%%, my favorite color is %%blue%%. 
+I like to set my terminal font to:("%%fontface%%").
+EOF
+```
+
+To process this template one can either use:  
+`$ mondo -g THEME` this will *generate* (process),
+all *_mondo-template* files in each **generator**.
+`$ mondo -a THEME` will do the same thing AND apply
+the generated files. We could also use:  
+`$ mondo -u GENERATOR` this will generate all themes
+for a specific GENERATOR.  
+
+Lets say that our *MONDO_DIR* looks like this:  
+``` file
+~/.config/mondo
+  generator/
+    presentation/
+      _mondo-template (presentation file)
+      _mondo-settings
+      _mondo-generate
+      _mondo-apply
+  themes/
+    _default
+    example
+  post-apply
+  pre-apply
+```
+
+If we where to execute the generate command on the
+example theme:  
+`$ mondo -g example`  
+
+A file name example would get generated in presentation
+directory after that the script *_mondo-generate* would get
+executed (the scripts are empty by default).  
+
+``` file
+~/.config/mondo
+  generator/
+    presentation/
+      _mondo-template (presentation file)
+      _mondo-settings
+      _mondo-generate
+      _mondo-apply
+      example (generated file)
+  themes/
+    _default
+    example (theme file)
+  post-apply
+  pre-apply
+```
+
+`~/.config/mondo/generator/example`:  
+
+``` text
+My name is Nils Kvist, my favorite color is #0000FF. 
+I like to set my terminal font to:("Terminus").
+```
+
+If we now would execute `mondo` with the apply `-a`
+option on the `example` theme, the following would happen:
+
+`$ mondo -a example`
+
+1. the *pre-apply* script would get executed 
+   (empty by default)
+2. if the theme is not generated, it would be generated
+   following the same procedure as above, for each generator.
+3. If the variable `target` is set in *_mondo-settings,
+   the generated file (*generator/presentation/example*),
+   would be copied to the location specified as `target`
+4. *generator/presentation/_mondo-apply* would get executed.
+   (*empty by default*)
+5. The file *mondo-xres* would get written. This file is
+   in `Xresources` format and can be used by 
+   `Xresources`/`Xdefaults`. But it'"'"'s used by mondo to keep
+   track of the current theme.
+6. *post-apply* would get executed
+
+Most of the autogenerated files have useful comments.
+
+OPTIONS
+-------
+
+`-v`  
+Show version and exit.
+
+`-h`  
+Show help and exit.
+
+`-a` THEME  
+Apply THEME. The following will happen:  
+
+[`-f`] `-g` THEME|all   
+Generate THEME. If `-f` is used, any existing generated
+files will get overwritten. If all is the argument, all
+themes will get generated.
+
+[`-f`] `-u` GENERATOR   
+Update GENERATOR. This will update all themes, but 
+only for the given GENERATOR. If `-f` is used, any 
+existing generated files will get overwritten.
+
+`-n` NAME  
+Create a new theme.  
+
+
+`-t` *FILE*|NAME [*FILE*]   
+Create a new generator. If the last argument
+is a path to an existing file, that file will be
+used to create the template (it will copy the file
+to *_mondo-template*, and add the path to the 
+target variable in *_mondo-settings*). If a path
+is the only argument, the filename without extension
+and leading dot will be used as the name for the 
+generator.
+
+`-l` theme|resource|icon|gtk|cursor|generator  
+Prints a list about the argument to stdout.
+
+FILES
+-----
+
+*MONDO_DIR/mondo-xres*  
+This file will get generated, when a theme is  
+applied (`-a`). The content of this file is the 
+theme, written in a format that can be read by
+`xrdb` (`.Xresources`,`.Xdefaults`).
+
+*MONDO_DIR/pre-apply*  
+This file get executed BEFORE any other action  
+when a THEME is applied (`-a`).   
+
+*MONDO_DIR/post-apply*  
+This file get executed AFTER all other actions are    
+executed when a THEME is applied (`-a`).  
+
+*_mondo-apply*  
+This file is auto generated with each generator.   
+It will get executed when a THEME is applied (`-a`).   
+
+*_mondo-generate*  
+This file is auto generated with each generator.   
+It will get executed when a THEME is generated (`-g`).   
+
+*_mondo-settings*  
+This file is auto generated with each generator.   
+It contains settings that will affect the generator.  
+
+*_mondo-template*  
+This file is auto generated with each generator.   
+This is the template file for the generator.  
+
+*themes/_default*  
+All user created themes will inherit the content of
+this file, it can be used to set common variables.
+
+ENVIRONMENT
+-----------
+
+`MONDO_DIR`  
+The path to a directory where all mondo files are   
+stored. Defaults to *~/.config/mondo*
+'
+
+bouthead="
+${NAME^^} 1 ${CREATED} Linux \"User Manuals\"
+=======================================
+
+NAME
+----
+"
+
+boutfoot="
+AUTHOR
+------
+
+${AUTHOR} <${CONTACT}>
+<https://budrich.github.io>
+
+"
   case "$1" in
     m ) printf '%s' "${about}" ;;
     
@@ -819,300 +791,6 @@ printinfo(){
     ;;
   esac
 }
-
-bouthead="
-${NAME^^} 1 ${CREATED} Linux \"User Manuals\"
-=======================================
-
-NAME
-----
-"
-
-boutfoot="
-AUTHOR
-------
-
-${AUTHOR} <${CONTACT}>
-<https://budrich.github.io>
-
-"
-
-about='
-`mondo` - Theme manager and generator
-
-SYNOPSIS
---------
-`mondo` `-v`|`-h`  
-`mondo` `-a` THEME  
-`mondo` [`-f`] `-g` THEME  
-`mondo` `-n` *FILE*|NAME [*FILE*]  
-`mondo` `-t` *FILE*|NAME [*FILE*]  
-
-DESCRIPTION
------------
-
-`mondo` uses `xrdb` to apply colors and other settings
-from a theme to templates created by the user. The
-themes are `.Xresources` files.
-
-Themes are stored in *MONDO_DIR/themes*. Templates 
-(*mondo-template*) is one file that makes up a *generator*.
-Each generator directory is located in *MONDO_DIR/generator*.
-
-By defining special *mondo* resources in the themes,
-the values stored in those resources can be used in
-the templates.
-
-Example excerpt from a theme file:  
-`mondo.colors.yellow: #FFE000`
-
-To use the value when generating a file from a template,
-one could use this format:  
-`YellowSubmarine="%%colors.yellow%%"`  
-
-This would result in the following when the theme is generated:  
-`YellowSubmarine="#FFE000"`  
-
-THEMES
-------
-
-A new theme is created with the command: 
-`mondo -n FILE|NAME [FILE]`
-
-If FILE is the only argument the name of the theme will
-be the file name. If NAME is the only argument the predefined
-variables of the theme will be taken from Xresources. If FILE
-contains Xresources colors resources those will be set as predefined
-variables. Themes are stored in *MONDO_DIR/themes*  
-
-Example of colors resources:  
-``` text
-*foreground:  #e9e9f4
-*background:  #282936
-*color0:      #282936
-*color1:      #ea51b2
-*color2:      #ebff87
-```
-
-The mandatory content of a theme file is the following
-variables (the values can not be empty and needs to be 
-in hexadecimal format):  
-``` text
-#define fg #73675F
-#define bg #ebdbb2
-
-#define base00 #fbf1c7
-#define base01 #A69881
-#define base02 #ebdbb2
-#define base03 #d5c4a1
-
-#define base0 #282828
-#define base1 #73675F
-#define base2 #504945
-#define base3 #3c3836
-
-#define red #9d0006
-#define ora #af3a03
-#define grn #79740e
-#define ylw #b57614
-#define blu #076678
-#define mag #8f3f71
-#define vio #d65d0e
-#define cyn #427b58
-```
-
-The values of fg and bg must exist as values in the base groups.
-They can not exist in the same group. It is strongly suggested
-to keep similar colors (foreground/background) in each group.  
-
-The xresources colors resources will be auto generated and appended
-to the theme file when it is applied (mondo -a THEME). Therefor
-the color resources should be removed from `~/.Xresources`.
-
-These resources are managed by `mondo`:  
-``` text
-*.foreground:     fg
-*.background:     bg 
-*.cursorColor:    fg
-*.cursorColor2:   bg
-*.border:         bg
-
-*.color0:         bg
-*.color8:         base0
-*.color1:         red
-*.color9:         ora
-*.color2:         grn
-*.color10:        base1
-*.color3:         ylw
-*.color11:        base3
-*.color4:         blu
-*.color12:        vio
-*.color5:         mag
-*.color13:        base01
-*.color6:         cyn
-*.color14:        base02
-*.color7:         fg
-*.color15:        base03
-```
-
-The two files *mondo-base* and *mondo-init* that is found in
-*MONDO_DIR* are also appended to the theme file when a theme
-is applied (`mondo -a THEME`). The content of these files are not
-mandatory but holds common and more or less static variable
-and resource definitions.
-
-GENERATORS  
-----------  
-A new generator directory is created with the command:  
-`mondo -t FILE|NAME [FILE]`  
-
-If FILE is the only argument, the name of the generator will
-be the file name. If NAME is the only argument a generator without
-a template (*mondo-template*) file will get created. If FILE exist,
-it will be copied to the generator directory as *mondo-template*.
-The path to the file will also be entered as `target` in 
-*mondo-settings*. The target variable is however commented 
-out by default.  
-
-The command: `mondo -l resources` lists all resources that can
-be used in a *mondo-template* file. All valid resources within 
-double percentage signs (%%class.type%%) will be replaced with 
-the value of that resource when a theme is generated 
-(`mondo -[f]g THEME`).
-
-When a generator is activated with an existing theme,
-(`mondo -[f]g THEME`) a file is created in the generators 
-directory, with the same name as the theme. If that file already
-exist it will be kept untouched if not the force (`-f`) option
-is set, then a new file will be generated.  
-
-In the file, `mondo-settings`, it is possible to fine
-tune the extension, and format (if format is set to *rgb*,
-the color will be translated to rgb format) of the generated
-file. There is also a setting called `target`, if this is set, 
-the generated file will be copied (`cp -f`) to path specified  
-when the theme is applied (`mondo -a THEME`).
-
-To have other actions then copy to target being executed on the 
-file one can write scripts in the files: *mondo-apply* 
-(this script will get executed when the theme is applied) and 
-*mondo-generate* (this will get executed AFTER the file is generated). 
-These files are autocreated with each generator and are by default 
-bash scripts, but if shebang is changed another interpreter could 
-be used (such as perl, python, ruby or zsh).
-
-Similarly the files *pre-apply* and *post-apply* in *MONDO_DIR* are
-executed before and/or after a theme is applied and before and/or
-after any generator is invoked. 
-
-The only actions that is taken without any settings done and that
-is mandatory when a theme is applied (`mondo -a THEME`) is the theme
-being included in *~/.Xresources* and the command 
-`xrdb -load ~/.Xresources` is executed.  
-
-OPTIONS
--------
-
-`-v`  
-  Show version and exit.
-
-`-h`  
-  Show help and exit.
- 
-`-a` THEME  
-  Apply THEME. The following will happen:  
-
-    1. The file (script) MONDO_DIR/pre-apply will  
-       get executed.  
-
-    2. MONDO_DIR/mondo-theme will get created.  
-
-    3. MONDO_DIR/mondo-theme will get included in  
-       ~/.Xresources  
-
-    4. The command `xrdb -load ~/.Xresources` will  
-       get executed.  
-
-    5. Generators will get applied and the file(s)  
-       mondo-apply will get executed.  
-
-    6. The file (script) MONDO_DIR/post-apply will  
-       get executed.  
-
-
-[`-f`] `-g` THEME   
-  Generate THEME. The following will happen:
-
-  1. A file named THEME will be generated based on 
-     mondo-template in each generator directory if
-     it doesn'"'"'t already exist. If `-f` flag is set  
-     it will always generate the file, even if it  
-     already exist.
-
-  2. If a file was generated the file (script)  
-     *mondo-generate* will get executed.
-
-
-`-n` *FILE*|NAME [*FILE*]   
-  Create a new theme, see description above.  
-
-
-`-t` *FILE*|NAME [*FILE*]   
-    Create a new generator, see description above.
-
-
-FILES
------
-
-*MONDO_DIR/mondo-theme*  
-  This file will get generated, when a theme is  
-  generated (`-g`) or applied (`-a`). The content  
-  of this file is the selected  
-  THEME + *MONDO_DIR/mondo-base* + *MONDO_DIR/mondo-init*  
-  and some auto generated resources. This is file    
-  will get included in *~/.Xresources*.  
-
-*MONDO_DIR/mondo-base*  
-  The content of this file will get appended to   
-  mondo-theme, when a theme is generated (`-g`) or   
-  applied (`-a`).    
-
-*MONDO_DIR/mondo-init*  
-  The content of this file will get appended to  
-  mondo-theme, when a theme is generated (`-g`) or   
-  applied (`-a`).    
-
-*MONDO_DIR/pre-apply*  
-  This file get executed BEFORE any other action  
-  when a THEME is applied (`-a`).   
-
-*MONDO_DIR/post-apply*  
-  This file get executed AFTER all other actions are    
-  executed when a THEME is applied (`-a`).  
-
-*mondo-apply*  
-  This file is auto generated with each generator.   
-  It will get executed when a THEME is applied (`-a`).   
-
-*mondo-generate*  
-  This file is auto generated with each generator.   
-  It will get executed when a THEME is generated (`-g`).   
-
-*mondo-settings*  
-  This file is auto generated with each generator.   
-  It contains settings that will affect the generator.  
-
-*mondo-template*  
-  This file is auto generated with each generator.   
-  This is the template file for the generator.  
-
-ENVIRONMENT
------------
-
-`MONDO_DIR`  
-  The path to a directory where all mondo files are   
-  stored. Defaults to *~/.config/mondo*
-'
 
 if [ "$1" = "md" ]; then
   printinfo m
