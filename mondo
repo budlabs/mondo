@@ -48,6 +48,17 @@ main(){
 mondolist(){
   case "$1" in
 
+    get ) 
+      match="$(cat "$MONDO_DIR/themes/.current" \
+        | awk -v srch="$lastvar" '$1==srch {
+          $1="";sub(/^[[:space:]]*/,"",$0)
+          print
+          exit
+        }')"
+      [[ -n $match ]] && echo "${match}" \
+        || ERX "no match for $lastvar"
+    ;;
+
     theme* ) 
       ls "$MONDO_DIR/themes" \
       | grep -v '^_' | sort ;;
@@ -258,7 +269,6 @@ themetogenerator(){
     [[ -f "$dir/_mondo-settings" ]] \
       && . "$dir/_mondo-settings"
 
-    echo "$dir --- $ext"
     [[ -n $ext ]] \
       && themename="$wt_name.$ext" \
       || themename="$wt_name"
@@ -327,6 +337,10 @@ echo '#!/bin/bash
 # For instance one might want to kill certain processes
 # before applying, since some programs might overwrite
 # the new settings with the old. 
+
+# the output from this script will get passed to
+# post-apply, which is executed after a theme has
+# been applied.
 ' > "$fil"
 chmod +x "$fil" ;}
 }
@@ -346,7 +360,11 @@ echo "#!/bin/bash
 # For instance one might want to reload certain processes
 # like windowmanagers and statusbars. 
 
-# xrdb -load -I\$HOME "$XFILE"
+# $1 in this script contains the output from
+# `pre-apply`. By using eval you can pass multiple
+# variables and stuff between the scripts.
+
+# eval "${1}"
 " > "$fil"
 chmod +x "$fil" ;}
 }
@@ -514,8 +532,8 @@ ERR(){ >&2 echo $@; }
 ERX(){ >&2 echo $@ && exit 1 ; }
 
 printinfo(){
-about='
-`mondo` - Theme manager and generator
+about=\
+'`mondo` - a theme template manager and generator
 
 SYNOPSIS
 --------
@@ -705,8 +723,12 @@ is the only argument, the filename without extension
 and leading dot will be used as the name for the 
 generator.
 
-`-l` theme|resource|icon|gtk|cursor|generator  
+`-l` theme|resource|icon|gtk|cursor|generator 
 Prints a list about the argument to stdout.
+
+`-l` get VAR  
+Prints the value of VAR from the last applied theme
+(*MONDO_DIR/themes/.current).  
 
 FILES
 -----
