@@ -7,7 +7,7 @@ CONTACT='robstenklippa@gmail.com'
 CREATED="2018-01-25"
 UPDATED="2018-07-13"
 
-MONDO_DIR="${MONDO_DIR:-$HOME/.config/monte}"
+MONDO_DIR="${MONDO_DIR:-$HOME/.config/mondo}"
 
 DATEFORMAT='+%Y-%m-%d'
 
@@ -17,9 +17,6 @@ wt_name="" # name of theme in memory
 main(){
 
   [[ -z $1 ]] && printinfo && exit
-  # setwt nikes
-  # echo "${wt}" | sort
-  # exit
 
   eval lastvar="\${$#}"
 
@@ -27,19 +24,20 @@ main(){
 
     case "${option}" in
 
-      n) newtheme        "${OPTARG}" ;;
-      t) newgenerator    "${OPTARG}" ;;
-      g) generatetheme   "${OPTARG}" ;;
-      a) applytheme      "${OPTARG}" ;;
-      l) mondolist       "${OPTARG}" ;;
-      u) updategenerator "${OPTARG}" ;;
-      f) force=1                     ;;
+      n) ACTION="new"       newtheme        "${OPTARG}" ;;
+      t) ACTION="template"  newgenerator    "${OPTARG}" ;;
+      g) ACTION="generate"  generatetheme   "${OPTARG}" ;;
+      a) ACTION="apply"     applytheme      "${OPTARG}" ;;
+      l) ACTION="list"      mondolist       "${OPTARG}" ;;
+      u) ACTION="update"    updategenerator "${OPTARG}" ;;
+      f) force=1                                        ;;
 
       v) printf '%s\n' \
            "$NAME - version: $VERSION" \
            "updated: $UPDATED by $AUTHOR"
          exit ;;
-      h|*) printinfo && exit ;;
+      h) printinfo && exit ;;
+      *) printinfo && ERX "not a valid command: $0 $@" ;;
 
     esac
 
@@ -142,6 +140,7 @@ applytheme(){
     (
       target=""
       ext=""
+      dependencies=()
 
       [[ -f "$gdir/_mondo-settings" ]] \
         && . "$gdir/_mondo-settings"
@@ -251,7 +250,8 @@ themetogenerator(){
     || ERX "generator $1 doen't exist."
 
   if [[ -f "$dir/$wt_name" ]] && [[ -z $force ]]; then
-    ERR "theme $wt_name is already in $1."
+    [[ $ACTION = generate ]] \
+      && ERR "theme $wt_name is already in $1."
   else
     ext=""
 
@@ -438,7 +438,7 @@ newfile_generatorapply(){
 local fil="${1}"
 echo '#!/bin/bash
 # This script is executed every time a theme is applied.
-# Each generator can have it'"'"'s own mondo-apply script.
+# Each generator can have it'"'"'s own _mondo-apply script.
 
 # The default syntax is bash, but by changing the shebang,
 # one could use another language (f.i. perl or python).
@@ -448,12 +448,14 @@ echo '#!/bin/bash
 # If this script is not needed, this file can safely be removed.
 # (removing the file, will improve execution speed)
 
-# this_dir="${1%/*}"
-# this_file="${1##*/}"
-# this_theme="${this_file%.*}"
+# MONDO_DIR="${1%%/generator*}"
+# THIS_DIR="${1%/*}"
+# THIS_GENERATOR="${THIS_DIR##*/}"
+# THIS_FILE="${1##*/}"
+# THIS_THEME="${THIS_FILE%.*}"
 
 # To source the settings file one could use this:
-# source "${this_dir}/_mondo-settings"
+# source "${THIS_DIR}/_mondo-settings"
 ' > "$fil"
 chmod +x "$fil"
 }
@@ -462,7 +464,7 @@ newfile_generatorgenerate(){
 local fil="${1}"
 echo '#!/bin/bash
 # This script is executed every time a theme is generated.
-# Each generator can have it'"'"'s own mondo-generate script.
+# Each generator can have it'"'"'s own _mondo-generate script.
 
 # The default syntax is bash, but by changing the shebang,
 # one could use another language (f.i. perl or python).
@@ -472,12 +474,14 @@ echo '#!/bin/bash
 # If this script is not needed, this file can safely be removed.
 # (removing the file, will improve executioni speed)
 
-# this_dir="${1%/*}"
-# this_file="${1##*/}"
-# this_theme="${this_file%.*}"
+# MONDO_DIR="${1%%/generator*}"
+# THIS_DIR="${1%/*}"
+# THIS_GENERATOR="${THIS_DIR##*/}"
+# THIS_FILE="${1##*/}"
+# THIS_THEME="${THIS_FILE%.*}"
 
 # To source the settings file one could use this:
-# source "${this_dir}/_mondo-settings"
+# source "${THIS_DIR}/_mondo-settings"
 ' > "$fil"
 chmod +x "$fil"
 }
