@@ -254,52 +254,64 @@ setwt(){
 themetogenerator(){
   # generates a file (MONDO_DIR/generator/$1/THEME)
   # from a generator ($1) template
-
-  dir="$MONDO_DIR/generator/$1"
+  THIS_GENERATOR="$1"
+  dir="$MONDO_DIR/generator/$THIS_GENERATOR"
 
   [[ -d "$dir" ]] \
-    || ERX "generator $1 doen't exist."
+    || ERX "generator $THIS_GENERATOR doen't exist."
 
   if [[ -f "$dir/$wt_name" ]] && [[ -z $force ]]; then
     [[ $ACTION = generate ]] \
-      && ERR "theme $wt_name is already in $1."
+      && ERR "theme $wt_name is already in $THIS_GENERATOR."
+      return
   else
     ext=""
+    dependencies=()
 
     [[ -f "$dir/_mondo-settings" ]] \
       && . "$dir/_mondo-settings"
-
-    [[ -n $ext ]] \
-      && themename="$wt_name.$ext" \
-      || themename="$wt_name"
-      
-    {
-      echo "${wt}"
-      echo "__TEMPLATE"
-      cat "$dir/_mondo-template"
-    } | awk '
-
-      start!=1 && $0!="__TEMPLATE" {
-        cvar=$1
-        $1=""
-        sub(/[[:space:]]*/,"",$0)
-        cval=$0
-        vars[cvar]=cval
-      }
-
-      start==1 {
-        for (k in vars){
-          gsub("%%"k"%%",vars[k],$0)
-        }
-        print
-      }
-
-      $0=="__TEMPLATE" {start=1}
-    ' > "$dir/$themename"
-
-    [[ -f "$dir/_mondo-generate" ]] \
-      && "$dir/_mondo-generate" "$dir/$themename"
   fi
+
+  # check dependencies (defined in _mondo-settings)
+  for dep in ${dependencies[@]}; do
+    command -v > /dev/null 2>&1 $dep \
+    || pacman -Ql $dep > /dev/null 2>&1 || {
+      ERR "$dep is needed to use the " \
+          "$THIS_GENERATOR generator"
+      return
+    }
+  done
+
+  [[ -n $ext ]] \
+    && themename="$wt_name.$ext" \
+    || themename="$wt_name"
+    
+  {
+    echo "${wt}"
+    echo "__TEMPLATE"
+    cat "$dir/_mondo-template"
+  } | awk '
+
+    start!=1 && $0!="__TEMPLATE" {
+      cvar=$1
+      $1=""
+      sub(/[[:space:]]*/,"",$0)
+      cval=$0
+      vars[cvar]=cval
+    }
+
+    start==1 {
+      for (k in vars){
+        gsub("%%"k"%%",vars[k],$0)
+      }
+      print
+    }
+
+    $0=="__TEMPLATE" {start=1}
+  ' > "$dir/$themename"
+
+  [[ -f "$dir/_mondo-generate" ]] \
+    && "$dir/_mondo-generate" "$dir/$themename"
 }
 
 readtheme(){
