@@ -14,6 +14,13 @@ DATEFORMAT='+%Y-%m-%d'
 wt=""      # theme in memory
 wt_name="" # name of theme in memory
 
+# add get here for fastest getting (~16ms)
+[[ $1 = get ]] && {
+  sed -n 's/^'$2'\b[[:space:]]*//p' \
+  "$MONDO_DIR/themes/.current"
+  exit
+}
+
 main(){
 
   [[ -z $1 ]] && printinfo && exit
@@ -47,17 +54,6 @@ main(){
 
 mondolist(){
   case "$1" in
-
-    get ) 
-      match="$(cat "$MONDO_DIR/themes/.current" \
-        | awk -v srch="$LASTVAR" '$1==srch {
-          $1="";sub(/^[[:space:]]*/,"",$0)
-          print
-          exit
-        }')"
-      [[ -n $match ]] && echo "${match}" \
-        || ERX "no match for $LASTVAR"
-    ;;
 
     theme* ) 
       ls "$MONDO_DIR/themes" \
@@ -570,7 +566,7 @@ SYNOPSIS
 `mondo` [`-f`] `-u` GENERATOR [THEME] 
 `mondo` `-n` NAME  
 `mondo` `-l` theme|resource|icon|gtk|cursor   
-`mondo` `-l` get VARIABLE   
+`mondo` get VARIABLE   
 `mondo` `-t` *FILE*|NAME [*FILE*]  
 
 DESCRIPTION
@@ -755,7 +751,7 @@ generator.
 `-l` theme|resource|icon|gtk|cursor|generator 
 Prints a list about the argument to stdout.
 
-`-l` get VAR  
+get VAR  
 Prints the value of VAR from the last applied theme
 (*MONDO_DIR/themes/.current).  
 

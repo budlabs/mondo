@@ -1,11 +1,3 @@
-You only need the `mondo` script from this repository to use **mondo**, all needed config files will get generated. You could also use [my mondo settings](https://github.com/budlabs/mondo-contrib/tree/master/lets), but i **strongly** recommend you review the files before applying any themes.
-
-INSTALLATION
-------------
-
-As mentioned above, all you need is the `mondo` script. You can install it with `# make install` for a systemwide installation including man page.  
-**mondo** is also available in [AUR](https://aur.archlinux.org/packages/mondo-generator/), where the package is named *mondo-generator*.  
-
 # `mondo` - a theme template manager and generator
 
 SYNOPSIS
@@ -16,7 +8,7 @@ SYNOPSIS
 `mondo` [`-f`] `-u` GENERATOR [THEME] 
 `mondo` `-n` NAME  
 `mondo` `-l` theme|resource|icon|gtk|cursor   
-`mondo` `-l` get VARIABLE   
+`mondo` get VARIABLE   
 `mondo` `-t` *FILE*|NAME [*FILE*]  
 
 DESCRIPTION
@@ -201,7 +193,7 @@ generator.
 `-l` theme|resource|icon|gtk|cursor|generator 
 Prints a list about the argument to stdout.
 
-`-l` get VAR  
+get VAR  
 Prints the value of VAR from the last applied theme
 (*MONDO_DIR/themes/.current).  
 
