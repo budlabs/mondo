@@ -7,7 +7,7 @@ CONTACT='robstenklippa@gmail.com'
 CREATED="2018-01-25"
 UPDATED="2018-08-09"
 
-MONDO_DIR="${MONDO_DIR:-$HOME/.config/mondo2}"
+MONDO_DIR="${MONDO_DIR:-$HOME/.config/mondo}"
 
 DATEFORMAT='+%Y-%m-%d'
 
