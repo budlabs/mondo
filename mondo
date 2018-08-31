@@ -1,7 +1,7 @@
 #!/bin/env bash
 
 __name="mondo"
-__version="0.101"
+__version="0.102"
 __author="budRich"
 __contact='robstenklippa@gmail.com'
 __created="2018-01-25"
@@ -12,7 +12,7 @@ MONDO_DIR="${MONDO_DIR:-$HOME/.config/mondo}"
 
 # add get here for fastest getting (~16ms)
 [[ $1 = get ]] && {
-  sed -n 's/^'$2'\b[[:space:]]*//p' \
+  sed -n 's/^'"$2"'\b[[:space:]]*//p' \
   "$MONDO_DIR/themes/.current"
   exit
 }
@@ -34,7 +34,7 @@ main(){
   )"
 
   while true; do
-    [[ $1 = -- ]] && option=$1 || {
+    [[ $1 = -- ]] && option="$1" || {
       option="${1##--}" 
       option="${option##-}"   
     }
@@ -177,7 +177,7 @@ applytheme(){
   setwt "$1"
   echo "${__wt}" > "$MONDO_DIR/themes/.current"
 
-  [[ -f "$MONDO_DIR/pre-apply" ]] \
+  [[ -x "$MONDO_DIR/pre-apply" ]] \
     && preop="$("$MONDO_DIR"/pre-apply)"
 
   for g in $(mondolist generator); do
@@ -257,7 +257,7 @@ newbase(){
 }
 
 newtheme(){
-  [[ -f "$MONDO_DIR/themes/$1" ]] && [[ -z $__force ]] \
+  [[ -f "$MONDO_DIR/themes/$1" ]] && ((__force!=1)) \
     && ERX "theme $1 already exist"
 
   [[ -f "$MONDO_DIR/themes/_default" ]] \
@@ -303,58 +303,60 @@ themetogenerator(){
   [[ -d "$dir" ]] \
     || ERX "generator $this_generator doen't exist."
 
-  if [[ -f "$dir/$__wt_name" ]] && [[ -z $__force ]]; then
-    [[ $ACTION = generate ]] \
+  if [[ -f "$dir/$__wt_name" ]] && ((__force!=1)); then
+    [[ $__action = generate ]] \
       && ERR "theme $__wt_name is already in $this_generator."
-      return
+    :
   else
     ext=""
     dependencies=()
 
     [[ -f "$dir/_mondo-settings" ]] \
       && . "$dir/_mondo-settings"
-  fi
+  
 
-  # check dependencies (defined in _mondo-settings)
-  for dep in "${dependencies[@]}"; do
-    command -v > /dev/null 2>&1 "$dep" \
-    || pacman -Ql "$dep" > /dev/null 2>&1 || {
-      ERR "$dep is needed to use the " \
-          "$this_generator generator"
-      return
-    }
-  done
-
-  [[ -n $ext ]] \
-    && themename="$__wt_name.$ext" \
-    || themename="$__wt_name"
-    
-  {
-    echo "${__wt}"
-    echo "__TEMPLATE"
-    cat "$dir/_mondo-template"
-  } | awk '
-
-    start!=1 && $0!="__TEMPLATE" {
-      cvar=$1
-      $1=""
-      sub(/[[:space:]]*/,"",$0)
-      cval=$0
-      vars[cvar]=cval
-    }
-
-    start==1 {
-      for (k in vars){
-        gsub("%%"k"%%",vars[k],$0)
+    # check dependencies (defined in _mondo-settings)
+    for dep in "${dependencies[@]}"; do
+      command -v > /dev/null 2>&1 "$dep" \
+      || pacman -Ql "$dep" > /dev/null 2>&1 || {
+        ERR "$dep is needed to use the " \
+            "$this_generator generator"
+        return
       }
-      print
-    }
+    done
 
-    $0=="__TEMPLATE" {start=1}
-  ' > "$dir/$themename"
+    [[ -n $ext ]] \
+      && themename="$__wt_name.$ext" \
+      || themename="$__wt_name"
+      
+    {
+      echo "${__wt}"
+      echo "__TEMPLATE"
+      cat "$dir/_mondo-template"
+    } | awk '
 
-  [[ -f "$dir/_mondo-generate" ]] \
-    && "$dir/_mondo-generate" "$dir/$themename"
+      start!=1 && $0!="__TEMPLATE" {
+        cvar=$1
+        $1=""
+        sub(/[[:space:]]*/,"",$0)
+        cval=$0
+        vars[cvar]=cval
+      }
+
+      start==1 {
+        for (k in vars){
+          gsub("%%"k"%%",vars[k],$0)
+        }
+        print
+      }
+
+      $0=="__TEMPLATE" {start=1}
+    ' > "$dir/$themename"
+
+    [[ -f "$dir/_mondo-generate" ]] \
+      && "$dir/_mondo-generate" "$dir/$themename"
+
+  fi
 }
 
 readtheme(){
