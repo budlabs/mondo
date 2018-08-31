@@ -1,58 +1,85 @@
-#!/bin/bash
+#!/bin/env bash
 
-NAME="mondo"
-VERSION="0.1.1"
-AUTHOR="budRich"
-CONTACT='robstenklippa@gmail.com'
-CREATED="2018-01-25"
-UPDATED="2018-08-09"
+__name="mondo"
+__version="0.102"
+__author="budRich"
+__contact='robstenklippa@gmail.com'
+__created="2018-01-25"
+__updated="2018-08-31"
 
-MONDO_DIR="${MONDO_DIR:-$HOME/.config/mondo2}"
-
-DATEFORMAT='+%Y-%m-%d'
-
-wt=""      # theme in memory
-wt_name="" # name of theme in memory
+# environment variables
+MONDO_DIR="${MONDO_DIR:-$HOME/.config/mondo}"
 
 # add get here for fastest getting (~16ms)
 [[ $1 = get ]] && {
-  sed -n 's/^'$2'\b[[:space:]]*//p' \
+  sed -n 's/^'"$2"'\b[[:space:]]*//p' \
   "$MONDO_DIR/themes/.current"
   exit
 }
 
+# global variables
+__action=""
+__force=0
+__dateformat='+%Y-%m-%d'
+__wt=""      # theme in memory
+__wt_name="" # name of theme in memory
+
 main(){
+  local option
 
-  [[ -z $1 ]] && printinfo && exit
+  eval set -- "$(getopt --name "$__name" \
+    --options vh::n:g:a:l:t:fu: \
+    --longoptions version,help::,new:,generate:,apply:,list:,template:,force,update: \
+    -- "$@"
+  )"
 
-  eval LASTVAR="\${$#}"
+  while true; do
+    [[ $1 = -- ]] && option="$1" || {
+      option="${1##--}" 
+      option="${option##-}"   
+    }
 
-  while getopts :vhn:g:a:l:t:fu: option; do
+    case "$option" in
+      v | version ) printinfo version ; exit ;;
+      h | help ) printinfo "${2:-}" shift 2 ; exit ;;
 
-    case "${option}" in
+      f | force    ) __force=1 shift ;;  
 
-      n) ACTION="new"       newtheme        "${OPTARG}" ;;
-      t) ACTION="template"  newgenerator    "${OPTARG}" ;;
-      g) ACTION="generate"  generatetheme   "${OPTARG}" ;;
-      a) ACTION="apply"     applytheme      "${OPTARG}" ;;
-      l) ACTION="list"      mondolist       "${OPTARG}" ;;
-      u) ACTION="update"    updategenerator "${OPTARG}" ;;
-      f) force=1                                        ;;
+      n | new      ) 
+                     __action=new
+                     newtheme "${2:-}"
+                     shift 2 ;;
+      t | template ) 
+                     __action=template
+                     newgenerator "${2:-}"
+                     shift 2 ;;
+      g | generate ) 
+                     __action=generate
+                     generatetheme "${2:-}"
+                     shift 2 ;;
+      a | apply    ) 
+                     __action=apply
+                     applytheme "${2:-}"
+                     shift 2 ;;
+      l | list     ) 
+                     __action=list
+                     mondolist "${2:-}"
+                     shift 2 ;;
+      u | update   ) 
+                     __action=update
+                     updategenerator "${2:-}"
+                     shift 2 ;;
 
-      v) printf '%s\n' \
-           "$NAME - version: $VERSION" \
-           "updated: $UPDATED by $AUTHOR"
-         exit ;;
-      h) printinfo && exit ;;
-      *) printinfo && ERX "not a valid command: $0 $@" ;;
+      -- ) shift; break ;;
+      * ) break ;;
 
     esac
-
   done
-  
 }
 
 mondolist(){
+  local f
+
   case "$1" in
 
     theme* ) 
@@ -63,11 +90,14 @@ mondolist(){
       ls "$MONDO_DIR/generator" | sort ;;
 
     var* )
-      vf="$MONDO_DIR/themes/$LASTVAR"
+      vf="$MONDO_DIR/themes/$__lastarg"
       [[ -f "$vf" ]] \
-        && setwt $LASTVAR \
-        || wt=$(cat "$MONDO_DIR/themes/.current")
-      printf '%%%%%s%%%%\t%s\n' ${wt} | sort
+        && setwt "$__lastarg" \
+        || __wt="$(cat "$MONDO_DIR/themes/.current")"
+        # wt="$(cat "$MONDO_DIR/themes/.current")"
+      echo "${__wt}" | awk '{printf "%-19s%s\n", "%%"$1"%%", $2}'
+
+      # printf '%%%%%s%%%%%15s\n' 
     ;;
 
     icon*   )   
@@ -78,7 +108,7 @@ mondolist(){
         echo "${f##*/}"
       done 
 
-      for f in $HOME/.icons/*; do
+      for f in "$HOME"/.icons/*; do
 
         [[ -d "$f/cursors" ]] && continue
         [[ ${f##*/} = default ]] && continue
@@ -92,7 +122,7 @@ mondolist(){
         echo "${f##*/}"
       done 
 
-      for f in $HOME/.themes/*; do
+      for f in "$HOME"/.themes/*; do
         [[ -d "$f/gtk-2.0" ]] || continue
         echo "${f##*/}"
       done 
@@ -109,7 +139,7 @@ mondolist(){
         echo "${f##*/}"
       done 
 
-      for f in $HOME/.icons/*; do
+      for f in "$HOME"/.icons/*; do
         [[ -d "$f/cursors" ]] || continue
         [[ ${f##*/} = default ]] && continue
         echo "${f##*/}"
@@ -120,18 +150,19 @@ mondolist(){
 
 updategenerator(){
 
-  local trgtheme
+  local trgtheme dir t
 
   dir="$MONDO_DIR/generator/$1"
 
+  # comment
   [[ -d "$dir" ]] \
     || ERX "generator $1 doesn't exist."
 
-  if [[ $1 != $LASTVAR ]]; then
-    trgtheme="$MONDO_DIR/themes/$LASTVAR"
+  if [[ $1 != "${__lastarg:-}" ]]; then
+    trgtheme="$MONDO_DIR/themes/$__lastarg"
     [[ -f "$trgtheme" ]] \
-      || ERX "$MONDO_DIR/themes/$LASTVAR doesn't exist"
-    setwt "$LASTVAR" && themetogenerator "$1"
+      || ERX "$MONDO_DIR/themes/$__lastarg doesn't exist"
+    setwt "$__lastarg" && themetogenerator "$1"
   else
     for t in $(mondolist themes); do
       setwt "$t"
@@ -141,13 +172,13 @@ updategenerator(){
 }
 
 applytheme(){
-  local template gdir
+  local template gdir preop g
 
   setwt "$1"
-  echo "${wt}" > "$MONDO_DIR/themes/.current"
+  echo "${__wt}" > "$MONDO_DIR/themes/.current"
 
-  [[ -f "$MONDO_DIR/pre-apply" ]] \
-    && preop="$($MONDO_DIR/pre-apply)"
+  [[ -x "$MONDO_DIR/pre-apply" ]] \
+    && preop="$("$MONDO_DIR"/pre-apply)"
 
   for g in $(mondolist generator); do
     themetogenerator "$g"
@@ -161,8 +192,8 @@ applytheme(){
         && . "$gdir/_mondo-settings"
 
       [[ -n $ext ]] \
-        && template="$gdir/${wt_name}.$ext" \
-        || template="$gdir/$wt_name"
+        && template="$gdir/${__wt_name}.$ext" \
+        || template="$gdir/$__wt_name"
 
       [[ -n $target ]] \
         && cp -f "$template" "${target/'~'/$HOME}"
@@ -177,9 +208,11 @@ applytheme(){
 }
 
 generatetheme(){
+  local t g
+
   if [[ $1 = all ]]; then
     for t in $(mondolist themes); do 
-      generatetheme $t
+      generatetheme "$t"
     done
   else
     setwt "$1"
@@ -191,23 +224,24 @@ generatetheme(){
 }
 
 newgenerator(){
-  local src="$1"
-  local nmn="${src##*/}"
-  nmn=${nmn//'.'/}
-  local dir="$MONDO_DIR/generator/$nmn"
+  local src nmn dir filex
+
+  src="$1"
+  nmn="${src##*/}" nmn=${nmn//'.'/}
+  dir="$MONDO_DIR/generator/$nmn"
 
   [[ -d "$dir" ]] \
     && ERX "generator $nmn already exist" \
     || mkdir -p "$dir"
 
-  [[ -f "$LASTVAR" ]] && filex="$LASTVAR"
+  [[ -f "$__lastarg" ]] && filex="$__lastarg"
 
   newfile_generatorapply "$dir/_mondo-apply"
   newfile_generatorgenerate "$dir/_mondo-generate"
   newfile_generatorsettings "$dir/_mondo-settings"
 
   [[ -n "$filex" ]] \
-    && cp -f "$LASTVAR" "$dir/_mondo-template" \
+    && cp -f "$__lastarg" "$dir/_mondo-template" \
     || touch "$dir/mondo-template"
 
   echo "$dir/_mondo-template"
@@ -223,7 +257,7 @@ newbase(){
 }
 
 newtheme(){
-  [[ -f "$MONDO_DIR/themes/$1" ]] && [[ -z $force ]] \
+  [[ -f "$MONDO_DIR/themes/$1" ]] && ((__force!=1)) \
     && ERX "theme $1 already exist"
 
   [[ -f "$MONDO_DIR/themes/_default" ]] \
@@ -233,7 +267,7 @@ newtheme(){
     printf '!! %-10s%s\n' \
       "Theme:" "$1" \
       "Author:" "$USER" \
-      "Created:" "$(date "$DATEFORMAT")"
+      "Created:" "$(date "$__dateformat")"
 
     cat "$MONDO_DIR/themes/_template"
   } > "$MONDO_DIR/themes/$1"
@@ -247,75 +281,82 @@ setwt(){
   [[ -f "$MONDO_DIR/themes/$1" ]] \
     || ERX "theme $1 doen't exist."
 
-  wt_name="$1"
+  __wt_name="$1"
 
-  wt="$(
+  __wt="$(
     cd "$MONDO_DIR/themes"
-    readtheme <(echo theme "$1"; cat "$1" _default "$1")
+    readtheme <(
+      echo theme "$__wt_name"
+      cat "$__wt_name" _default "$__wt_name")
   )"
 }
 
 themetogenerator(){
+  local this_generator dir ext dep themename
+
   # generates a file (MONDO_DIR/generator/$1/THEME)
   # from a generator ($1) template
-  THIS_GENERATOR="$1"
-  dir="$MONDO_DIR/generator/$THIS_GENERATOR"
+
+  this_generator="$1"
+  dir="$MONDO_DIR/generator/$this_generator"
 
   [[ -d "$dir" ]] \
-    || ERX "generator $THIS_GENERATOR doen't exist."
+    || ERX "generator $this_generator doen't exist."
 
-  if [[ -f "$dir/$wt_name" ]] && [[ -z $force ]]; then
-    [[ $ACTION = generate ]] \
-      && ERR "theme $wt_name is already in $THIS_GENERATOR."
-      return
+  if [[ -f "$dir/$__wt_name" ]] && ((__force!=1)); then
+    [[ $__action = generate ]] \
+      && ERR "theme $__wt_name is already in $this_generator."
+    :
   else
     ext=""
     dependencies=()
 
     [[ -f "$dir/_mondo-settings" ]] \
       && . "$dir/_mondo-settings"
-  fi
+  
 
-  # check dependencies (defined in _mondo-settings)
-  for dep in ${dependencies[@]}; do
-    command -v > /dev/null 2>&1 $dep \
-    || pacman -Ql $dep > /dev/null 2>&1 || {
-      ERR "$dep is needed to use the " \
-          "$THIS_GENERATOR generator"
-      return
-    }
-  done
-
-  [[ -n $ext ]] \
-    && themename="$wt_name.$ext" \
-    || themename="$wt_name"
-    
-  {
-    echo "${wt}"
-    echo "__TEMPLATE"
-    cat "$dir/_mondo-template"
-  } | awk '
-
-    start!=1 && $0!="__TEMPLATE" {
-      cvar=$1
-      $1=""
-      sub(/[[:space:]]*/,"",$0)
-      cval=$0
-      vars[cvar]=cval
-    }
-
-    start==1 {
-      for (k in vars){
-        gsub("%%"k"%%",vars[k],$0)
+    # check dependencies (defined in _mondo-settings)
+    for dep in "${dependencies[@]}"; do
+      command -v > /dev/null 2>&1 "$dep" \
+      || pacman -Ql "$dep" > /dev/null 2>&1 || {
+        ERR "$dep is needed to use the " \
+            "$this_generator generator"
+        return
       }
-      print
-    }
+    done
 
-    $0=="__TEMPLATE" {start=1}
-  ' > "$dir/$themename"
+    [[ -n $ext ]] \
+      && themename="$__wt_name.$ext" \
+      || themename="$__wt_name"
+      
+    {
+      echo "${__wt}"
+      echo "__TEMPLATE"
+      cat "$dir/_mondo-template"
+    } | awk '
 
-  [[ -f "$dir/_mondo-generate" ]] \
-    && "$dir/_mondo-generate" "$dir/$themename"
+      start!=1 && $0!="__TEMPLATE" {
+        cvar=$1
+        $1=""
+        sub(/[[:space:]]*/,"",$0)
+        cval=$0
+        vars[cvar]=cval
+      }
+
+      start==1 {
+        for (k in vars){
+          gsub("%%"k"%%",vars[k],$0)
+        }
+        print
+      }
+
+      $0=="__TEMPLATE" {start=1}
+    ' > "$dir/$themename"
+
+    [[ -f "$dir/_mondo-generate" ]] \
+      && "$dir/_mondo-generate" "$dir/$themename"
+
+  fi
 }
 
 readtheme(){
@@ -470,6 +511,7 @@ selectedfg   light
 
 newfile_generatorapply(){
 local fil="${1}"
+
 echo '#!/bin/bash
 # This script is executed every time a theme is applied.
 # Each generator can have it'"'"'s own _mondo-apply script.
@@ -496,6 +538,7 @@ chmod +x "$fil"
 
 newfile_generatorgenerate(){
 local fil="${1}"
+
 echo '#!/bin/bash
 # This script is executed every time a theme is generated.
 # Each generator can have it'"'"'s own _mondo-generate script.
@@ -522,6 +565,7 @@ chmod +x "$fil"
 
 newfile_generatorsettings(){
 local fil="${1}"
+
 echo '# The content of this file is sourced by mondo.
 # The syntax is bash. But it is not recommended to
 # add any script functions other then variable declaration
@@ -551,10 +595,8 @@ else
 fi >> "$fil"
 }
 
-ERR(){ >&2 echo $@; }
-ERX(){ >&2 echo $@ && exit 1 ; }
-
 printinfo(){
+  local about bouthead boutfoot
 about=\
 '`mondo` - a theme template manager and generator
 
@@ -562,9 +604,9 @@ SYNOPSIS
 --------
 `mondo` `-v`|`-h`  
 `mondo` `-a` THEME  
-`mondo` [`-f`] `-g` THEME|all  
-`mondo` [`-f`] `-u` GENERATOR [THEME] 
 `mondo` `-n` NAME  
+`mondo` [`-f`] `-g` THEME|all  
+`mondo` [`-f`] `-u` GENERATOR [THEME]   
 `mondo` `-l` theme|resource|icon|gtk|cursor   
 `mondo` get VARIABLE   
 `mondo` `-t` *FILE*|NAME [*FILE*]  
@@ -801,7 +843,7 @@ stored. Defaults to `~/.config/mondo`
 '
 
 bouthead="
-${NAME^^} 1 ${CREATED} Linux \"User Manuals\"
+${__name^^} 1 ${__updated} Linux \"User Manuals\"
 =======================================
 
 NAME
@@ -812,20 +854,32 @@ boutfoot="
 AUTHOR
 ------
 
-${AUTHOR} <${CONTACT}>
+${__author} <${__contact}>
 <https://budrich.github.io>
 
 "
   case "$1" in
-    m ) printf '# %s' "${about}" ;;
+    # print version info to stdout
+    version )
+      printf '%s\n' \
+        "$__name - version: $__version" \
+        "updated: $__updated by $__author"
+      exit
+      ;;
+    # print help in markdown format to stdout
+    md ) printf '%s' "# ${about}" ;;
+
+    # print help in markdown format to README.md
+    mdg ) printf '%s' "# ${about}" > "${__dir}/README.md" ;;
     
-    f ) 
-      printf '%s' "${bouthead}"
-      printf '%s' "${about}"
-      printf '%s' "${boutfoot}"
+    # print help in troff format to __dir/__name.1
+    man ) 
+      printf '%s' "${bouthead}" "${about}" "${boutfoot}" \
+      | go-md2man > "${__dir}/${__name}.1"
     ;;
 
-    ''|* ) 
+    # print help to stdout
+    * ) 
       printf '%s' "${about}" | awk '
          BEGIN{ind=0}
          $0~/^```/{
@@ -843,12 +897,23 @@ ${AUTHOR} <${CONTACT}>
   esac
 }
 
-if [ "$1" = "md" ]; then
-  printinfo m
-  exit
-elif [ "$1" = "man" ]; then
-  printinfo f
-  exit
-else
-  main "${@}"
-fi
+ERR(){ >&2 echo "[WARNING]" "$*"; }
+ERX(){ >&2 echo "[ERROR]" "$*" && exit 1 ; }
+
+init(){
+  set -o errexit
+  set -o pipefail
+  set -o nounset
+  # set -o xtrace
+
+  __source="$(readlink -f "${BASH_SOURCE[0]}")"
+  __dir="$(cd "$(dirname "${__source}")" && pwd)"
+  __file="${__dir}/$(basename "${__source}")"
+  __base="$(basename ${__file} .sh)"
+  __root="$(cd "$(dirname "${__dir}")" && pwd)" # <-- change this as it depends on your app
+}
+
+init
+__lastarg=""
+eval __lastarg="\${$#}"
+main "${@}"

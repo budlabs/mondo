@@ -4,9 +4,9 @@ SYNOPSIS
 --------
 `mondo` `-v`|`-h`  
 `mondo` `-a` THEME  
-`mondo` [`-f`] `-g` THEME|all  
-`mondo` [`-f`] `-u` GENERATOR [THEME] 
 `mondo` `-n` NAME  
+`mondo` [`-f`] `-g` THEME|all  
+`mondo` [`-f`] `-u` GENERATOR [THEME]   
 `mondo` `-l` theme|resource|icon|gtk|cursor   
 `mondo` get VARIABLE   
 `mondo` `-t` *FILE*|NAME [*FILE*]  
