@@ -2,14 +2,15 @@
 
 SYNOPSIS
 --------
-`mondo` `-v`|`-h`  
-`mondo` `-a` THEME  
-`mondo` `-n` NAME  
-`mondo` [`-f`] `-g` THEME|all  
-`mondo` [`-f`] `-u` GENERATOR [THEME]   
-`mondo` `-l` theme|resource|icon|gtk|cursor   
+`mondo` `-h`|`--help`  
+`mondo` `-v`|`--version`  
 `mondo` get VARIABLE   
-`mondo` `-t` *FILE*|NAME [*FILE*]  
+`mondo` `-a`|`--apply` THEME  
+`mondo` `-n`|`--new` NAME  
+`mondo` [`-f`|`--force`] `-g`|`--generate` THEME|all  
+`mondo` [`-f`|`--force`] `-u`|`--update` GENERATOR [THEME]   
+`mondo` `-l`|`--list` theme|resource|icon|gtk|cursor   
+`mondo` `-t`|`--template` *FILE*|[NAME *FILE*]  
 
 DESCRIPTION
 -----------
