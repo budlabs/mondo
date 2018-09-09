@@ -43,7 +43,9 @@ main(){
       v | version ) printinfo version ; exit ;;
       h | help ) printinfo "${2:-}" shift 2 ; exit ;;
 
-      f | force    ) __force=1 shift ;;  
+      f | force    )
+                     __force=1
+                     shift ;;  
 
       n | new      ) 
                      __action=new
@@ -257,7 +259,7 @@ newbase(){
 }
 
 newtheme(){
-  [[ -f "$MONDO_DIR/themes/$1" ]] && ((__force!=1)) \
+  [[ -f "$MONDO_DIR/themes/$1" ]] && (($__force!=1)) \
     && ERX "theme $1 already exist"
 
   [[ -f "$MONDO_DIR/themes/_default" ]] \
@@ -303,7 +305,7 @@ themetogenerator(){
   [[ -d "$dir" ]] \
     || ERX "generator $this_generator doen't exist."
 
-  if [[ -f "$dir/$__wt_name" ]] && ((__force!=1)); then
+  if [[ -f "$dir/$__wt_name" ]] && (($__force!=1)); then
     [[ $__action = generate ]] \
       && ERR "theme $__wt_name is already in $this_generator."
     :
