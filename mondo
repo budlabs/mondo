@@ -1,11 +1,11 @@
 #!/bin/env bash
 
 __name="mondo"
-__version="0.104"
+__version="0.105"
 __author="budRich"
 __contact='robstenklippa@gmail.com'
 __created="2018-01-25"
-__updated="2018-09-09"
+__updated="2018-09-10"
 
 # environment variables
 MONDO_DIR="${MONDO_DIR:-$HOME/.config/mondo}"
@@ -212,6 +212,7 @@ applytheme(){
       target=""
       ext=""
       dependencies=()
+      inject=
 
       [[ -f "$gdir/_mondo-settings" ]] \
         && . "$gdir/_mondo-settings"
@@ -220,8 +221,16 @@ applytheme(){
         && template="$gdir/${__wt_name}.$ext" \
         || template="$gdir/$__wt_name"
 
-      [[ -n $target ]] \
-        && cp -f "$template" "${target/'~'/$HOME}"
+      target="${target/'~'/$HOME}"
+
+      if [[ -f $target ]] && [[ -n $inject ]]; then
+        trgtop="$(awk '{print;if(/MONDO-BEGIN$/) exit}' "$target")"
+        trgbot="$(awk '/MONDO-END$/{ss=1};ss==1{print}' "$target")"
+        cat <(echo "${trgtop}") "$template" <(echo "${trgbot}") > "$target"
+      elif [[ -n $target ]]; then
+        mkdir -p "${target%/*}"
+        cp -f "$template" "${target}"
+      fi
 
       [[ -f "$gdir/_mondo-apply" ]] \
         && "$gdir/_mondo-apply" "$template"
@@ -267,7 +276,7 @@ newgenerator(){
 
   [[ -n "$filex" ]] \
     && cp -f "$__lastarg" "$dir/_mondo-template" \
-    || touch "$dir/mondo-template"
+    || touch "$dir/_mondo-template"
 
   echo "$dir/_mondo-template"
 }
@@ -606,10 +615,13 @@ echo '# The content of this file is sourced by mondo.
 # when files are generated.
 # ext=""
 
+# If inject is set, only replace content between 
+# MONDO-BEGIN and MONDO-END in target.
+# inject=True
+
 # target can be an (absolute) file path to where
-# the file will be copied when a theme is applied.
-# target=""
-'  > "$fil"
+# the file will be copied when a theme is applied.'\
+> "$fil"
 
 if [[ -n $filex ]]; then
   fildir=$(dirname "$filex")
