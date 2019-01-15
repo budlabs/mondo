@@ -1,36 +1,34 @@
-.TH MONDO 1 2018\-09\-10 Linux "User Manuals"
+.TH MONDO 1 2019\-01\-15 Linx "User Manuals"
 .SH NAME
 .PP
 \fB\fCmondo\fR \- a theme template manager and generator
 
 .SH SYNOPSIS
 .PP
-\fB\fCmondo\fR \fB\fC\-h\fR|\fB\fC\-\-help\fR
-.br
-\fB\fCmondo\fR \fB\fC\-v\fR|\fB\fC\-\-version\fR
-.br
-\fB\fCmondo\fR get VARIABLE
-.br
-\fB\fCmondo\fR \fB\fC\-a\fR|\fB\fC\-\-apply\fR THEME
-.br
-\fB\fCmondo\fR \fB\fC\-n\fR|\fB\fC\-\-new\fR NAME
-.br
-\fB\fCmondo\fR [\fB\fC\-f\fR|\fB\fC\-\-force\fR] \fB\fC\-g\fR|\fB\fC\-\-generate\fR THEME|all
-.br
-\fB\fCmondo\fR [\fB\fC\-f\fR|\fB\fC\-\-force\fR] \fB\fC\-u\fR|\fB\fC\-\-update\fR GENERATOR [THEME]
-.br
-\fB\fCmondo\fR \fB\fC\-l\fR|\fB\fC\-\-list\fR theme|resource|icon|gtk|cursor
-.br
-\fB\fCmondo\fR \fB\fC\-t\fR|\fB\fC\-\-template\fR \fIFILE\fP|[NAME \fIFILE\fP]
+.RS
+
+.nf
+mondo \-\-help|\-h  
+mondo \-\-version|\-v  
+mondo get VARIABLE   
+mondo \-\-new|\-n NAME  
+mondo \-\-apply|\-a THEME  
+mondo [\-\-force|\-f] \-\-generate|\-g THEME|all  
+mondo [\-\-force|\-f] \-\-update|\-u GENERATOR [THEME]
+mondo \-\-list|\-l theme|var|icon|gtk|cursor   
+mondo \-\-template|\-t **FILE**|[NAME *FILE*]  
+
+.fi
+.RE
 
 .SH DESCRIPTION
 .PP
-\fB\fCmondo\fR applies variables defined in themefiles to
-templates defined in generators. \fB\fCmondo\fR executes
-userdefined scripts before any theme is applied,
-after each theme is applies and after all themes
-are applied. It can also execute a script after each
-theme is \fIgenerated\fP\&.
+\fB\fCmondo\fR applies variables defined in themefiles
+to templates defined in generators. \fB\fCmondo\fR
+executes userdefined scripts before any theme is
+applied, after each theme is applies and after all
+themes are applied. It can also execute a script
+after each theme is \fIgenerated\fP\&.
 
 .SH THEMES
 .PP
@@ -39,11 +37,11 @@ create a new theme, use the \fB\fC\-n\fR option.
 
 .PP
 The first word of each line is the name of a
-\fBmondo variable\fP, the rest of the line (excluding
-white space between the first and the second word)
-will be the value of that variable. Below i create
-a simple theme called \fB\fCexample\fR\&. (the theme name is
-always it's filename.)
+\fBmondo variable\fP, the rest of the line
+(excluding white space between the first and the
+second word) will be the value of that variable.
+Below i create a simple theme called \fB\fCexample\fR\&.
+(the theme name is always it's filename.)
 
 .PP
 .RS
@@ -62,30 +60,37 @@ EOF
 .PP
 *in the example above the theme file is created
 directly, it is strongly recommended to use: *
-.br
 \fB\fCmondo \-n THEME\fR \fIto create a theme\fP\&.
 
 .PP
-Lines starting with \fB\fC#\fR, will be ignored.
-The example above would result in three variables:
-  * author="Nils Kvist"
-  * blue="#0000FF"
-  * fontface="Terminus"
+Lines starting with \fB\fC#\fR, will be ignored. The
+example above would result in three variables:
+
+.RS
+.IP \(bu 2
+author="Nils Kvist"
+.IP \(bu 2
+blue="#0000FF"
+.IP \(bu 2
+fontface="Terminus"
+
+.RE
 
 .SH GENERATORS
 .PP
 Generators are located in \fIMONDO\_DIR\fP/generator.
 To create a new generator use the \fB\fC\-t\fR option. The
-only file that is needed for a generator to work is
-\fI\_mondo\-template\fP\&. If a filename was the last argument
-when \fB\fCmondo\fR was executed with the \fB\fC\-t\fR (create generator)
-option, \fI\_mondo\-template\fP will be a copy of that file.
+only file that is needed for a generator to work
+is \fI\_mondo\-template\fP\&. If a filename was the last
+argument when \fB\fCmondo\fR was executed with the \fB\fC\-t\fR
+(create generator) option, \fI\_mondo\-template\fP will
+be a copy of that file.
 
 .PP
-In the template files, one can use the \fBmondo variables\fP
-defined in the theme files by typing the name of the
-variable enclosed in double (\fB\fC%%\fR) percentage characters,
-like this:
+In the template files, one can use the \fBmondo
+variables\fP defined in the theme files by typing
+the name of the variable enclosed in double (\fB\fC%%\fR)
+percentage characters, like this:
 
 .PP
 .RS
@@ -101,14 +106,12 @@ EOF
 .RE
 
 .PP
-To process this template one can either use:
-.br
-\fB\fC$ mondo \-g THEME\fR this will \fIgenerate\fP (process),
+To process this template one can either use: \fB\fC$
+mondo \-g THEME\fR this will \fIgenerate\fP (process),
 all \fI\_mondo\-template\fP files in each \fBgenerator\fP\&.
-\fB\fC$ mondo \-a THEME\fR will do the same thing AND apply
-the generated files. We could also use:
-.br
-\fB\fC$ mondo \-u GENERATOR\fR this will generate all themes
+\fB\fC$ mondo \-a THEME\fR will do the same thing AND
+apply the generated files. We could also use: \fB\fC$
+mondo \-u GENERATOR\fR this will generate all themes
 for a specific GENERATOR.
 
 .PP
@@ -135,15 +138,17 @@ Lets say that our \fIMONDO\_DIR\fP looks like this:
 .RE
 
 .PP
-If we where to execute the generate command on the
-example theme:
-.br
+If we where to execute the generate command on
+the example theme:
+
+.PP
 \fB\fC$ mondo \-g example\fR
 
 .PP
-A file name example would get generated in presentation
-directory after that the script \fI\_mondo\-generate\fP would get
-executed (the scripts are empty by default).
+A file name example would get generated in
+presentation directory after that the script
+\fI\_mondo\-generate\fP would get executed (the scripts
+are empty by default).
 
 .PP
 .RS
@@ -180,8 +185,9 @@ I like to set my terminal font to:("Terminus").
 .RE
 
 .PP
-If we now would execute \fB\fCmondo\fR with the apply \fB\fC\-a\fR
-option on the \fB\fCexample\fR theme, the following would happen:
+If we now would execute \fB\fCmondo\fR with the apply
+\fB\fC\-a\fR option on the \fB\fCexample\fR theme, the following
+would happen:
 
 .PP
 \fB\fC$ mondo \-a example\fR
@@ -189,154 +195,112 @@ option on the \fB\fCexample\fR theme, the following would happen:
 .RS
 .IP "  1." 5
 the \fIpre\-apply\fP script would get executed
-(empty by default)
-.br
-.IP "  2." 5
-if the theme is not generated, it would be generated
-following the same procedure as above, for each generator.
-.br
-.IP "  3." 5
-If the variable \fB\fCtarget\fR is set in *\_mondo\-settings,
-the generated file (\fIgenerator/presentation/example\fP),
-would be copied to the location specified as \fB\fCtarget\fR
-.br
-.IP "  4." 5
-\fIgenerator/presentation/\_mondo\-apply\fP would get executed.
-(\fIempty by default\fP)
-.br
-.IP "  5." 5
-A file called \fB\fCMONDO\_DIR/themes/.current\fR is generated
-it contains all variables and is used when \fB\fCmondo \-l var|get\fR
-is executed.
-.br
-.IP "  6." 5
-\fIpost\-apply\fP would get executed
-.br
 
 .RE
 
 .PP
-Most of the autogenerated files have useful comments.
+(empty by default)
+.br
+2. if the theme is not generated, it would be generated
+
+.PP
+following the same procedure as above, for each
+generator.
+.br
+3. If the variable \fB\fCtarget\fR is set in *\_mondo\-settings,
+
+.PP
+the generated file
+(\fIgenerator/presentation/example\fP),    would be
+copied to the location specified as \fB\fCtarget\fR
+.br
+4. \fIgenerator/presentation/\_mondo\-apply\fP would get executed.
+
+.PP
+(\fIempty by default\fP)
+.br
+5. A file called \fB\fCMONDO\_DIR/themes/.current\fR is generated
+
+.PP
+it contains all variables and is used when \fB\fCmondo
+\-l var|get\fR    is executed.
+.br
+6. \fIpost\-apply\fP would get executed
+
+.PP
+Most of the autogenerated files have useful
+comments.
 
 .SH OPTIONS
 .PP
-\fB\fC\-v\fR|\fB\fC\-\-version\fR
-.br
-Show version and exit.
-
-.PP
-\fB\fC\-h\fR|\fB\fC\-\-help\fR
+\fB\fC\-\-help\fR|\fB\fC\-h\fR
 .br
 Show help and exit.
 
 .PP
-\fB\fC\-a\fR|\fB\fC\-\-apply\fR THEME
+\fB\fC\-\-version\fR|\fB\fC\-v\fR
 .br
-Apply THEME. The following will happen:
+Show version and exit.
 
 .PP
-[\fB\fC\-f\fR|\fB\fC\-\-force\fR] \fB\fC\-g\fR|\fB\fC\-\-generate\fR THEME|all
-.br
-Generate THEME. If \fB\fC\-f\fR is used, any existing generated
-files will get overwritten. If all is the argument, all
-themes will get generated.
+\fB\fC\-\-new\fR|\fB\fC\-n\fR NAME
 
 .PP
-[\fB\fC\-f\fR|\fB\fC\-\-force\fR] \fB\fC\-u\fR|\fB\fC\-\-update\fR GENERATOR [THEME]
+\fB\fC\-\-apply\fR|\fB\fC\-a\fR THEME
 .br
-Update GENERATOR. This will update all themes, but
-only for the given GENERATOR. If \fB\fC\-f\fR is used, any
-existing generated files will get overwritten. If
-the last argument is the name of an existing theme,
-only that theme will get generated.
+Apply THEME.
 
 .PP
-\fB\fC\-n\fR|\fB\fC\-\-name\fR NAME
-.br
-Create a new theme.
+\fB\fC\-\-force\fR|\fB\fC\-f\fR
 
 .PP
-\fB\fC\-t\fR|\fB\fC\-\-template\fR \fIFILE\fP|NAME [\fIFILE\fP]
+\fB\fC\-\-generate\fR|\fB\fC\-g\fR all
 .br
-Create a new generator. If the last argument
-is a path to an existing file, that file will be
-used to create the template (it will copy the file
-to \fI\_mondo\-template\fP, and add the path to the
-target variable in \fI\_mondo\-settings\fP). If a path
-is the only argument, the filename without extension
-and leading dot will be used as the name for the
-generator.
+Generate THEME. If \fB\fC\-f\fR is used, any existing
+generated files will get overwritten. If all is
+the argument, all themes will get generated.
 
 .PP
-\fB\fC\-l\fR|\fB\fC\-\-list\fR theme|resource|icon|gtk|cursor|generator
+\fB\fC\-\-update\fR|\fB\fC\-u\fR GENERATOR
+.br
+Update GENERATOR. This will update all themes,
+but only for the given GENERATOR. If \fB\fC\-f\fR is used,
+any existing generated files will get overwritten.
+If the last argument is the name of an existing
+theme, only that theme will get generated.
+
+.PP
+\fB\fC\-\-list\fR|\fB\fC\-l\fR cursor
+.br
 Prints a list about the argument to stdout.
 
 .PP
-get VAR
+\fB\fC\-\-template\fR|\fB\fC\-t\fR
 .br
-Prints the value of VAR from the last applied theme
-(\fIMONDO\_DIR/themes/.current\fP).
-
-.SH FILES
-.PP
-\fIMONDO\_DIR/pre\-apply\fP
-.br
-This file get executed BEFORE any other action
-.br
-when a THEME is applied (\fB\fC\-a\fR).
-
-.PP
-\fIMONDO\_DIR/post\-apply\fP
-.br
-This file get executed AFTER all other actions are
-.br
-executed when a THEME is applied (\fB\fC\-a\fR).
-
-.PP
-\fI\_mondo\-apply\fP
-.br
-This file is auto generated with each generator.
-.br
-It will get executed when a THEME is applied (\fB\fC\-a\fR).
-
-.PP
-\fI\_mondo\-generate\fP
-.br
-This file is auto generated with each generator.
-.br
-It will get executed when a THEME is generated (\fB\fC\-g\fR).
-
-.PP
-\fI\_mondo\-settings\fP
-.br
-This file is auto generated with each generator.
-.br
-It contains settings that will affect the generator.
-
-.PP
-\fI\_mondo\-template\fP
-.br
-This file is auto generated with each generator.
-.br
-This is the template file for the generator.
-
-.PP
-\fIthemes/\_default\fP
-.br
-All user created themes will inherit the content of
-this file, it can be used to set common variables.
+Create a new generator. If the last argument is a
+path to an existing file, that file will be used
+to create the template (it will copy the file to
+\fI\_mondo\-template\fP, and add the path to the target
+variable in \fI\_mondo\-settings\fP). If a path is the
+only argument, the filename without extension and
+leading dot will be used as the name for the
+generator.
 
 .SH ENVIRONMENT
 .PP
 \fB\fCMONDO\_DIR\fR
 .br
-The path to a directory where all mondo files are
-.br
-stored. Defaults to \fB\fC\~/.config/mondo\fR
+The path to a directory where all mondo files
+are. defaults to: $XDG\_CONFIG\_HOME/mondo
 
-.SH AUTHOR
+.SH DEPENDENCIES
+.PP
+\fB\fCbash\fR \fB\fCgawk\fR \fB\fCsed\fR
+
 .PP
 budRich 
-\[la]robstenklippa@gmail.com\[ra]
+\[la]https://github.com/budlabs/mondo\[ra]
 
-\[la]https://budrich.github.io\[ra]
+.SH SEE ALSO
+.PP
+bash(1), awk(1), sed(1),
