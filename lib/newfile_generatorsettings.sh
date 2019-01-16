@@ -22,6 +22,16 @@ echo '# The content of this file is sourced by mondo.
 # MONDO-BEGIN and MONDO-END in target.
 # inject=True
 
+# uncomment the colorformat below to use HEX (00-FF)
+# This is how fully opaque "white" would look like
+# with this format: #FFFFFFFF
+# colorformat="#%R%G%B%A"
+
+# uncomment the colorformat below to use RGB (0-255)
+# This is how fully opaque "white" would look like
+# with this format: 255,255,255,255
+# colorformat="%r,%g,%b,%a"
+
 # target can be an (absolute) file path to where
 # the file will be copied when a theme is applied.'\
 > "$fil"

@@ -61,6 +61,7 @@ EXAMPLES
 %%examples%%
 %%fi%%
 %%if -d releasenotes%%
+
 ## updates
 
 %%cat -tn 3 releasenotes/*%%
@@ -72,7 +73,9 @@ EXAMPLES
 %%readme_issues%%
 %%fi%%
 %%if readme_footer%%
+
 %%readme_footer%%
+
 %%fi%%
 
 %%if license%%

@@ -17,10 +17,8 @@ mondolist(){
       [[ -f "$vf" ]] \
         && setwt "$__lastarg" \
         || __wt="$(cat "$MONDO_DIR/themes/.current")"
-        # wt="$(cat "$MONDO_DIR/themes/.current")"
-      echo "${__wt}" | awk '{printf "%-19s%s\n", "%%"$1"%%", $2}'
 
-      # printf '%%%%%s%%%%%15s\n' 
+      echo "${__wt}" | awk '{printf "%-19s%s\n", "%%"$1"%%", gensub("^"$1"\\s*","",1,$0)}'
     ;;
 
     icon*   )   

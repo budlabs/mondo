@@ -10,14 +10,13 @@ applytheme(){
     && preop="$("$MONDO_DIR"/pre-apply)"
 
   for g in $(mondolist generator); do
-    echo "$g"
     themetogenerator "$g"
     gdir="$MONDO_DIR/generator/$g"
     (
       target=""
       ext=""
       dependencies=()
-      inject=
+      inject=""
 
       [[ -f "$gdir/_mondo-settings" ]] \
         && . "$gdir/_mondo-settings"
@@ -28,7 +27,7 @@ applytheme(){
 
       target="${target/'~'/$HOME}"
 
-      if [[ -f $target ]] && [[ -n $inject ]]; then
+      if [[ -f $target ]] && [[ ${inject,,} = true ]]; then
         trgtop="$(awk '{print;if(/MONDO-BEGIN$/) exit}' "$target")"
         trgbot="$(awk '/MONDO-END$/{ss=1};ss==1{print}' "$target")"
         cat <(echo "${trgtop}") "$template" <(echo "${trgbot}") > "$target"

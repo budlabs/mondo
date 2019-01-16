@@ -47,7 +47,7 @@ OPTIONS
 %%cat doc/*%%
 %%else%%
 %%if -d wiki/doc%%
-arbe
+
 %%cat wiki/doc/*%%
 %%fi%%
 %%fi%%

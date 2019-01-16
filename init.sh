@@ -3,8 +3,8 @@
 ___printversion(){
   
 cat << 'EOB' >&2
-mondo - version: 0.11
-updated: 2019-01-15 by budRich
+mondo - version: 2019.01.16.0
+updated: 2019-01-16 by budRich
 EOB
 }
 
@@ -21,34 +21,34 @@ mondo - a theme template manager and generator
 
 SYNOPSIS
 --------
-mondo --help|-h  
-mondo --version|-v  
 mondo get VARIABLE   
 mondo --new|-n NAME  
 mondo --apply|-a THEME  
 mondo [--force|-f] --generate|-g THEME|all  
 mondo [--force|-f] --update|-u GENERATOR [THEME]
 mondo --list|-l theme|var|icon|gtk|cursor   
-mondo --template|-t FILE|[NAME FILE]  
+mondo --template|-t FILE|[NAME FILE] 
+mondo --call|-c FUNCTION [THEME]
+mondo --help|-h  
+mondo --version|-v  
 
 OPTIONS
 -------
 
---help|-h  
-Show help and exit.
-
-
---version|-v  
-Show version and exit.
-
-
 --new|-n NAME  
+Creates a new theme named NAME inside
+MONDO_DIR/themes.
+
 
 --apply|-a THEME  
 Apply THEME.
 
 
 --force|-f  
+When this flag is set,  the --update and
+--generate options will overwrite any existing
+files when processing themes.
+
 
 --generate|-g all  
 Generate THEME. If -f is used, any existing
@@ -68,7 +68,7 @@ theme, only that theme will get generated.
 Prints a list about the argument to stdout.
 
 
---template|-t  
+--template|-t FILE  
 Create a new generator. If the last argument is a
 path to an existing file, that file will be used
 to create the template (it will copy the file to
@@ -77,6 +77,30 @@ variable in _mondo-settings). If a path is the
 only argument, the filename without extension and
 leading dot will be used as the name for the
 generator.
+
+
+--call|-c FUNCTION  
+Can be used to test the color functions,
+(mix,lighter,darker,more,less) from the
+commandline.  
+
+
+   $ mondo --call "mix #FFFFFF #000000 0.6"
+   #666666
+
+
+
+If the last argument is the name of an existing
+theme, the variables of that theme will be
+available, otherwise the variables of  the last
+applied theme is available.  
+
+
+--help|-h  
+Show help and exit.
+
+--version|-v  
+Show version and exit.
 
 EOB
 }
@@ -88,22 +112,23 @@ done
 
 declare -A __o
 eval set -- "$(getopt --name "mondo" \
-  --options "hvn:a:fg:u:l:t" \
-  --longoptions "help,version,new:,apply:,force,generate:,update:,list:,template," \
+  --options "n:a:fg:u:l:t:c:hv" \
+  --longoptions "new:,apply:,force,generate:,update:,list:,template:,call:,help,version," \
   -- "$@"
 )"
 
 while true; do
   case "$1" in
-    --help       | -h ) __o[help]=1 ;; 
-    --version    | -v ) __o[version]=1 ;; 
     --new        | -n ) __o[new]="${2:-}" ; shift ;;
     --apply      | -a ) __o[apply]="${2:-}" ; shift ;;
     --force      | -f ) __o[force]=1 ;; 
     --generate   | -g ) __o[generate]="${2:-}" ; shift ;;
     --update     | -u ) __o[update]="${2:-}" ; shift ;;
     --list       | -l ) __o[list]="${2:-}" ; shift ;;
-    --template   | -t ) __o[template]=1 ;; 
+    --template   | -t ) __o[template]="${2:-}" ; shift ;;
+    --call       | -c ) __o[call]="${2:-}" ; shift ;;
+    --help       | -h ) __o[help]=1 ;; 
+    --version    | -v ) __o[version]=1 ;; 
     -- ) shift ; break ;;
     *  ) break ;;
   esac

@@ -12,13 +12,14 @@ themetogenerator(){
   [[ -d "$dir" ]] \
     || ERX "generator $this_generator doen't exist."
 
-  if [[ -f "$dir/$__wt_name" ]] && ((__force!=1)); then
+  if [[ -f "$dir/$__wt_name" ]] && ((__o[force]!=1)); then
     [[ $__action = generatetheme ]] \
       && ERR "theme $__wt_name is already in $this_generator."
     :
   else
     ext=""
     dependencies=()
+    colorformat="default"
 
     [[ -f "$dir/_mondo-settings" ]] \
       && . "$dir/_mondo-settings"
@@ -34,6 +35,7 @@ themetogenerator(){
       }
     done
 
+
     [[ -n $ext ]] \
       && themename="$__wt_name.$ext" \
       || themename="$__wt_name"
@@ -42,24 +44,27 @@ themetogenerator(){
       echo "${__wt}"
       echo "__TEMPLATE"
       cat "$dir/_mondo-template"
-    } | awk '
+    } | awk -i <(awklib) -v colorformat="${colorformat}" '
 
-      start!=1 && $0!="__TEMPLATE" {
-        cvar=$1
-        $1=""
-        sub(/[[:space:]]*/,"",$0)
-        cval=$0
-        vars[cvar]=cval
+      start!=1 && $0!="__TEMPLATE" && match($0,/(\w+)\s+(.+)/,ma) {
+        vars[ma[1]]=ma[2]
       }
 
       start==1 {
-        for (k in vars){
-          gsub("%%"k"%%",vars[k],$0)
+        split($0,apa,"%%")
+        for (l in apa) {
+          if (l%2==0) {
+            toreplace=apa[l]
+            toexpand=expand(apa[l])
+            sub("%%"toreplace"%%",toexpand)
+          }
         }
+        
         print
       }
 
       $0=="__TEMPLATE" {start=1}
+
     ' > "$dir/$themename"
 
     [[ -f "$dir/_mondo-generate" ]] \
