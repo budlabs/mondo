@@ -239,5 +239,8 @@ addiction.
 [bashbud]: https://github.com/budlabs/bashbud
 
 
+## license
+
+**mondo** is licensed with the **MIT license**
 
 
