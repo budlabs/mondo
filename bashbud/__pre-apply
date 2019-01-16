@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+# increment version number
+# set updated to today in manifest.md
+
+projectdir="$1"
+newver="$(date +%Y.%m.%d).0"
+curver="$(bashbud --get version)"
+
+[[ ${newver%.*} = "${curver%.*}" ]] && {
+  controldigit="${curver##*.}"
+  newver="${newver%.*}.$((controldigit+1))"
+}
+
+bashbud --set version "$newver" "$projectdir"
+bashbud --set updated "$(date +%Y-%m-%d)" "$projectdir"
+
+[[ -d $projectdir/awklib ]] && {
+  # update ass list
+  {
+    echo '#!/usr/bin/env bash'
+    echo
+    echo 'awklib() {'
+    echo "cat << 'EOB'"
+    cat "$projectdir/awklib/"*
+    echo 'EOB'
+    echo '}'
+  } > "$projectdir/lib/awklib.sh"  
+}
