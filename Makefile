@@ -12,7 +12,7 @@ install:
 	test -d $(INSTBIN) || mkdir -p $(INSTBIN)
 	test -d $(INSTMAN) || mkdir -p $(INSTMAN)
 
-	install -m 0755 $(SCRIPT) $(INSTBIN)
+	install -m 0755 program.sh $(INSTBIN)/$(SCRIPT)
 	install -m 0644 $(MANPAGE) $(INSTMAN)
 .PHONY: install
 
