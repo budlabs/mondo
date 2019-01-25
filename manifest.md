@@ -1,8 +1,8 @@
 ---
 description: >
   a theme template manager and generator
-updated:       2019-01-16
-version:       2019.01.16.1
+updated:       2019-01-25
+version:       2019.01.25.0
 author:        budRich
 repo:          https://github.com/budlabs/mondo
 created:       2018-01-25
