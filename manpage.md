@@ -318,6 +318,11 @@ See the [wiki] for a more details on how to use
 ENVIRONMENT
 -----------
 
+`XDG_CONFIG_HOME`  
+Where user-specific configurations should be
+written (analogous to /etc).
+defaults to: $HOME/.config
+
 `MONDO_DIR`  
 The path to a directory where all mondo files
 are.
