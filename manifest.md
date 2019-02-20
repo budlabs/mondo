@@ -2,7 +2,7 @@
 description: >
   a theme template manager and generator
 updated:       2019-02-20
-version:       2019.02.20.3
+version:       2019.02.20.5
 author:        budRich
 repo:          https://github.com/budlabs/mondo
 created:       2018-01-25

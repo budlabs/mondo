@@ -146,7 +146,12 @@ See the [wiki] for a more details on how to use **mondo**.
 
 ## updates
 
+### 2019.02.20.5
+
+Added default to **$XDG_CONFIG_DIR**, fixes issue [#14].
+
 ### 2019.01.16.0
+
 
 Major refactoring to make use of the [bashbud] framework.  
 [bashbud]: https://github.com/budlabs/bashbud
