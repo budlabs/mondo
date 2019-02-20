@@ -148,7 +148,9 @@ See the [wiki] for a more details on how to use **mondo**.
 
 ### 2019.01.16.0
 
-Major refactoring to make use of the [bashbud] framework.  %%%WRAPTHIS%%%[bashbud]: https://github.com/budlabs/bashbud
+Major refactoring to make use of the [bashbud] framework.  
+[bashbud]: https://github.com/budlabs/bashbud
+
 
 
 #### color functions

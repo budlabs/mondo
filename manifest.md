@@ -1,8 +1,8 @@
 ---
 description: >
   a theme template manager and generator
-updated:       2019-01-25
-version:       2019.01.25.0
+updated:       2019-02-20
+version:       2019.02.20.3
 author:        budRich
 repo:          https://github.com/budlabs/mondo
 created:       2018-01-25
@@ -10,6 +10,7 @@ dependencies:  [bash, gawk, sed]
 see-also:      [bash(1), awk(1), sed(1)]
 license:       mit
 environ:
+    XDG_CONFIG_HOME: $HOME/.config
     MONDO_DIR: $XDG_CONFIG_HOME/mondo
 synopsis: |
     get VARIABLE   
@@ -23,6 +24,8 @@ synopsis: |
     --help|-h  
     --version|-v  
 ...
+
+
 
 # long_description
 

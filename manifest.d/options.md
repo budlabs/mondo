@@ -36,6 +36,10 @@ Create a new generator. If the last argument is a path to an existing file, that
 # options-list-description
 Prints a list about the argument to stdout.
 
+# options-test-description
+
+this is just a **test** option
+
 # options-version-description
 Show version and exit.
 
