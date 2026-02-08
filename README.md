@@ -1,3 +1,5 @@
+# MAINTAINED AT https://git.budlabs.xyz/bud/mondo
+
 # mondo - a theme template manager and generator 
 
 **mondo** is a great tool to manage and create themes and
